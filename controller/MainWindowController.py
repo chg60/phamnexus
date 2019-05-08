@@ -161,10 +161,14 @@ class MainWindowController:
 		return
 
 	def check_updates(self):
-		# local version
-		f = open("version.txt", "r")
-		local_version = f.readline()
-		f.close()
+		if platform.system().lower() == "darwin":
+			f = open("version.txt", "r")
+			local_version = f.readline()
+			f.close()
+		else:
+			f = open("data/version.txt", "r")
+			local_version = f.readline()
+			f.close()
 
 		# remote version
 		response = requests.get(
@@ -173,7 +177,10 @@ class MainWindowController:
 		if remote_version > local_version:
 			update = tkinter.messagebox.askyesnocancel(
 				title="Updates Available",
-				message="Updates are available. Would you like to download them now? This should take a few seconds, and the new application will be found in your Downloads folder.")
+				message="Updates are available. Would you like to download "
+						"them now? This should take a few seconds, and the "
+						"new application will be found in your Downloads "
+						"folder.")
 		else:
 			tkinter.messagebox.showinfo(title="No Updates Available",
 										message="There are no updates available at this time.")
@@ -187,23 +194,18 @@ class MainWindowController:
 														   remote_version,
 														   remote_version))
 			elif platform.system().lower() == "linux":
-				os.system("cd ~/Downloads/; curl -LO "
-						  "https://raw.github.com/chg60/phamnexus/master"
-						  "/Linux-version{}.zip; unzip Linux-version{}.zip; "
-						  "rm Linux-version{}.zip".format(remote_version,
-														  remote_version,
-														  remote_version))
-			showinfo(title="Program Restart Required",
-					 message="The updated application can be found in your "
-							 "downloads folder. You'll need to manually drag "
-							 "it into your Applications folder to overwrite "
-							 "this version.")
+				showinfo(title="Updates Available",
+						 message="This feature is not yet fully functional on "
+								 "your system. If you are running this "
+								 "program from a Git repository, you can use"
+								 "git to pull updates. Otherwise, updates "
+								 "can be downloaded manually from GitHub.")
 
 	def documentation(self):
 		if platform.system().lower() == "darwin":
 			Popen(args=["open", "-a", "Preview", "Documentation.pdf"])
 		elif platform.system().lower() == "linux":
-			Popen(args=["xdg-open", "Documentation.pdf"])
+			Popen(args=["xdg-open", "data/Documentation.pdf"])
 
 	def report_bug(self):
 		showinfo(title="Bug Report Info",
