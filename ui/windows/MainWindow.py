@@ -10,7 +10,7 @@ class MainWindow:
 		self.controller = controller
 
 		self.root = Tk()
-		self.root.wm_title("SplitstreeHelper")
+		self.root.wm_title("PhameratorNexusBuilder")
 
 		width, height = int(self.root.winfo_screenwidth() * 0.75), \
 						int(self.root.winfo_screenheight() * 0.75)

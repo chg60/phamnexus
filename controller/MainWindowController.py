@@ -188,7 +188,7 @@ class MainWindowController:
 						  "https://raw.github.com/chg60/phamnexus/master/"
 						  "MacOS-version{}.zip; unzip MacOS-version{}.zip; "
 						  "rm MacOS-version{}.zip".format(remote_version,
-														  remote_version, 
+														  remote_version,
 														  remote_version))
 			else:
 				showinfo("This feature hasn't yet been completed for your "
