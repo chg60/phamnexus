@@ -11,7 +11,7 @@ For MacOS, a standalone application is available (MacOS-version#.#.#.zip) which 
 1.  sudo pip3 install pymysql
 2.  sudo pip3 install requests
 
-For Linux (only tested on Ubuntu 14.04+), a standalone application is not presently available, however a template .desktop file is available with the source code.  When filled in, the .desktop file will allow users to double-click to execute the program.  This program makes use of python3, pymysql, and requests, which aren't always installed by default, so users may need to execute the following commands from the Gnome Terminal in order to be able to run the program:
+For Linux (only tested on Ubuntu 14.04+), a standalone application is not presently available, however a template .desktop file is available with the source code.  When the "Path=" line is filled in properly (input path to your downloaded copy of this repository), the .desktop file will allow users to double-click to execute the program.  This program makes use of python3, pymysql, and requests, which aren't always installed by default, so users may need to execute the following commands from the Gnome Terminal in order to be able to run the program:
 
 1.  sudo apt-get install python3
 2.  sudo apt-get install python3-pymysql
