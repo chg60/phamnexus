@@ -45,4 +45,7 @@ class GetMySQLUserPassDialog(Toplevel):
 		if password == "":
 			password = None
 		self.destroy()
-		return username, password
+		# print(username, password)
+		self.controller.mysql_read_u = username
+		self.controller.mysql_read_p = password
+		return
