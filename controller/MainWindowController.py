@@ -161,9 +161,14 @@ class MainWindowController:
 
 	def check_updates(self):
 		# local version
-		f = open("version.txt", "r")
-		local_version = f.readline()
-		f.close()
+		if platform.system().lower() == "darwin":
+			f = open("version.txt", "r")
+			local_version = f.readline()
+			f.close()
+		else:
+			f = open("data/version.txt", "r")
+			local_version = f.readline()
+			f.close()
 
 		# remote version
 		response = requests.get(
@@ -181,28 +186,22 @@ class MainWindowController:
 			if platform.system().lower() == "darwin":
 				os.system("cd ~/Downloads/; curl -LO "
 						  "https://raw.github.com/chg60/phamnexus/master/"
-						  "MacOSX-version{}.zip; unzip MacOSX-version{}.zip; "
-						  "rm MacOSX-version{}.zip".format(remote_version,
-														   remote_version,
-														   remote_version))
-			elif platform.system().lower() == "linux":
-				os.system("cd ~/Downloads/; curl -LO "
-						  "https://raw.github.com/chg60/phamnexus/master"
-						  "/Linux-version{}.zip; unzip Linux-version{}.zip; "
-						  "rm Linux-version{}.zip".format(remote_version,
-														  remote_version,
+						  "MacOS-version{}.zip; unzip MacOS-version{}.zip; "
+						  "rm MacOS-version{}.zip".format(remote_version,
+														  remote_version, 
 														  remote_version))
-			showinfo(title="Program Restart Required",
-					 message="The updated application can be found in your "
-							 "downloads folder. You'll need to manually drag "
-							 "it into your Applications folder to overwrite "
-							 "this version.")
+			else:
+				showinfo("This feature hasn't yet been completed for your "
+						 "system.  Updates can be retrieved by downloading "
+						 "the updated git repository ("
+						 "https://github.com/chg60/phamnexus.git) to your "
+						 "machine.")
 
 	def documentation(self):
 		if platform.system().lower() == "darwin":
 			Popen(args=["open", "-a", "Preview", "Documentation.pdf"])
 		elif platform.system().lower() == "linux":
-			Popen(args=["xdg-open", "Documentation.pdf"])
+			Popen(args=["xdg-open", "data/Documentation.pdf"])
 
 	def report_bug(self):
 		showinfo(title="Bug Report Info",
