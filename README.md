@@ -4,9 +4,9 @@ This program's goal is to bridge the gap between Phamerator databases and Splits
 
 # Installation Instructions:
 
-In order to use this application you must have a local installation of MySQL (I recommend using a version no higher than 8.0.15).  For compatibility with modern MySQL versions (8.0+), when installing MySQL you should use the newest encryption settings (not legacy).
+In order to use this application you must have a local installation of MySQL (I recommend using a version no higher than 8.0.15).  MySQL can be installed on MacOS by navigating to https://downloads.mysql.com/archives/community/ and choosing Product Version 8.0.15 or lower.  For compatibility with modern MySQL versions (8.0+), when installing MySQL you should use the newest encryption settings (not legacy).  On Linux systems, MySQL can be installed either from the indicated website, or by using your system's package manager from the command line.
 
-For MacOS, a standalone application is available (MacOS-version#.#.#.zip) which when unzipped and placed in your desired Application folder will run when double-clicked like any other application.  The program can also be run from source if python3, pymysql, and requests are all installed.  Python 3 can be installed by downloading and running an installer from www.python.org/downloads/.  Pymysql and requests can be installed by opening the Mac Terminal and executing the following commands:
+For MacOS, a standalone application is available (MacOS-version#.#.#.zip) which when unzipped will leave you with an application called PhameratorNexusBuilder.app.  This .app package can be placed in your desired Application folder, and will run when double-clicked like any other application.  The program can also be run from source if python3, pymysql, and requests are all installed.  Python 3 can be installed by downloading and running an installer from www.python.org/downloads/.  Pymysql and requests can be installed by opening the Mac Terminal and executing the following commands:
 
 1.  sudo pip3 install pymysql
 2.  sudo pip3 install requests
