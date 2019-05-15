@@ -97,6 +97,50 @@ def get_database_clusters(username, password, database):
 		return
 
 
+def get_database_phages(username, password, database, status):
+	"""
+	Connects to MySQL using verified username, password, and a database
+	and queries for all the phages in the database matching the desired
+	status.
+	:param username: verified MySQL username
+	:param password: verified MySQL password
+	:param database: selected MySQL database
+	:param status: selected genome status (0 or 1)
+	:return phages: list of phages in the selected database matching
+	the genome status
+	"""
+	if status is None or status == 0:
+		try:
+			phages = []
+			query = "SELECT PhageID FROM phage"
+			con = pms.connect("localhost", username, password, database)
+			cur = con.cursor()
+			cur.execute(query)
+			results = cur.fetchall()
+			con.close()
+			for result in results:
+				phages.append(result[0])
+			return phages
+		except pms.err.Error as err:
+			print(err)
+			return
+	elif status == 1:
+		try:
+			phages = []
+			query = "SELECT PhageID FROM phage WHERE status = 'final'"
+			con = pms.connect("localhost", username, password, database)
+			cur = con.cursor()
+			cur.execute(query)
+			results = cur.fetchall()
+			con.close()
+			for result in results:
+				phages.append(result[0])
+			return phages
+		except pms.err.Error as err:
+			print(err)
+			return
+
+
 def get_phams_by_host(username, password, database, host, status):
 	"""
 	Connects to MySQL using verified username, password, and a database
@@ -106,7 +150,7 @@ def get_phams_by_host(username, password, database, host, status):
 	:param password: verified MySQL password
 	:param database: selected MySQL database
 	:param host: selected genome HostStrain
-	:param status: selected genome status
+	:param status: selected genome status (0 or 1)
 	:return pham_data: dictionary whose keys are phageids and whose
 	values are the phams in that phageid.
 	"""
@@ -165,7 +209,7 @@ def get_phams_by_cluster(username, password, database, cluster, status):
 	:param password: verified MySQL password
 	:param database: selected MySQL database
 	:param cluster: selected genome Cluster
-	:param status: selected genome status
+	:param status: selected genome status (0 or 1)
 	:return pham_data: dictionary whose keys are phageids and whose
 	values are the phams in that phageid.
 	"""
