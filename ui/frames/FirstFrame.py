@@ -12,6 +12,9 @@ class FirstFrame(Frame):
 		self.runmode_selection = IntVar()
 		self.runmode_selection.set(value=0)
 
+		self.final_only = IntVar()
+		self.final_only.set(value=0)
+
 		runmodes = ["Retrieve phams from selected Hosts",
 					"Retrieve phams from selected Clusters",
 					"Retrieve phams from selected Phages",
@@ -34,6 +37,14 @@ class FirstFrame(Frame):
 
 		self.prompt_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
 
+		self.final_only_frame = Frame(self.viewer)
+		self.final_only_checkbox = Checkbutton(master=self.final_only_frame,
+											   variable=self.final_only,
+											   text="Exclude draft genomes")
+		self.final_only_checkbox.pack(side=TOP, anchor=NW, fill=None,
+									  expand=True)
+		self.final_only_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
+
 		self.button_frame = Frame(self.viewer)
 		self.next_button = Button(self.button_frame, text="Next",
 								  command=self.next)
@@ -43,5 +54,6 @@ class FirstFrame(Frame):
 		self.viewer.pack(side=TOP, anchor=CENTER, fill=BOTH, expand=True)
 
 	def next(self):
-		self.controller.runmode_selection = self.runmode_selection.get()
+		self.controller.runmode = self.runmode_selection.get()
+		self.controller.final_status = self.final_only.get()
 		self.controller.redraw(frame=2)
