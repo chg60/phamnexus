@@ -17,8 +17,12 @@ from ui.windows.MainWindow import MainWindow
 class MainWindowController:
 	def __init__(self):
 		# Error messages
-		with open("data/errors.json", "r") as fh:
-			self.messages = json.load(fh)
+		try:
+			with open("errors.json", "r") as fh:
+				self.messages = json.load(fh)
+		except FileNotFoundError:
+			with open("data/errors.json", "r") as fh:
+				self.messages = json.load(fh)
 
 		# MySQL database read-only credentials
 		self.username = "anonymous"

@@ -421,6 +421,7 @@ class ThirdFrame(Frame):
 								   title="Choose save filename",
 								   filetypes=(("Nexus", "*.nex *.nxs "
 														"*.nexus"),))
+		self.root.update()
 		if len(result) == 0 or result == "":
 			showinfo(message="Program can't continue without a save "
 							 "filename. Please click 'Make Nexus File' "
