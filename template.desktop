@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Name=PhameratorNexusBuilder
+Icon=/usr/share/pixmaps/python.xpm
+StartupNotify=true
+Path=(input path to phamnexus folder, e.g. /home/christian/PycharmProjects/phamnexus/)
+Exec=python3 __main__.py
+Categories=Application;Utility;
