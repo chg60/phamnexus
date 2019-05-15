@@ -9,7 +9,7 @@ class SecondFrame(Frame):
 		self.controller = controller
 		self.root = root
 
-		dbs = self.controller.local_databases
+		dbs = self.controller.available_databases
 		self.db_selection = IntVar()
 		self.db_selection.set(value=0)
 
@@ -42,8 +42,8 @@ class SecondFrame(Frame):
 		self.viewer.pack(side=TOP, anchor=CENTER, fill=BOTH, expand=True)
 
 	def next(self):
-		self.controller.database_selection = \
-			self.controller.local_databases[self.db_selection.get()]
+		self.controller.selected_database = \
+			self.controller.available_databases[self.db_selection.get()]
 		self.controller.redraw(frame=3)
 
 	def back(self):
