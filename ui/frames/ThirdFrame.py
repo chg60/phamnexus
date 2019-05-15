@@ -12,18 +12,11 @@ class ThirdFrame(Frame):
 
 		self.controller = controller
 		self.root = root
-		self.runmode = self.controller.runmode_selection
-		username = self.controller.mysql_read_u
-		password = self.controller.mysql_read_p
-		database = self.controller.database_selection
-
-		labels = ["3. Choose the Host(s) whose phages' phams will be "
-				  "retrieved:",
-				  "3. Choose the Cluster(s) whose phages' phams will be "
-				  "retrieved:",
-				  "3. Choose the Phages whose phams will be retrieved:",
-				  "Gathering phams for all phages... click next",
-				  "Gathering phams for random phages... click next"]
+		self.runmode = self.controller.runmode
+		username = self.controller.username
+		password = self.controller.password
+		database = self.controller.selected_database
+		status = self.controller.final_status
 
 		self.viewer = Frame(self)
 
@@ -161,7 +154,8 @@ class ThirdFrame(Frame):
 		elif self.runmode == 2:
 			self.controller.available_phages = get_database_phages(username,
 																   password,
-																   database)
+																   database,
+																   status)
 			self.controller.available_phages.sort()
 
 			self.instruction_frame = Frame(self.viewer)
@@ -243,7 +237,8 @@ class ThirdFrame(Frame):
 
 			self.controller.available_phages = get_database_phages(username,
 																   password,
-																   database)
+																   database,
+																   status)
 			self.controller.available_phages.sort()
 
 			self.selection_frame = Frame(self.viewer)
@@ -316,7 +311,8 @@ class ThirdFrame(Frame):
 
 			self.controller.available_phages = get_database_phages(username,
 																   password,
-																   database)
+																   database,
+																   status)
 			self.controller.available_phages.sort()
 
 			self.selection_frame = Frame(self.viewer)
@@ -423,7 +419,8 @@ class ThirdFrame(Frame):
 		selection = self.selected_list.get(0, END)
 		result = asksaveasfilename(initialdir="~",
 								   title="Choose save filename",
-								   filetypes=(("Nexus File", "*.nex *.nexus")))
+								   filetypes=(("Nexus", "*.nex *.nxs "
+														"*.nexus"),))
 		if len(result) == 0 or result == "":
 			showinfo(message="Program can't continue without a save "
 							 "filename. Please click 'Make Nexus File' "
@@ -431,11 +428,11 @@ class ThirdFrame(Frame):
 			return
 
 		if self.runmode == 0:
-			self.controller.selected_hosts = selection
+			self.controller.selected_hosts = list(selection)
 		elif self.runmode == 1:
-			self.controller.selected_clusters = selection
+			self.controller.selected_clusters = list(selection)
 		elif self.runmode == 2 or self.runmode == 3 or self.runmode == 4:
-			self.controller.selected_phages = selection
+			self.controller.selected_phages = list(selection)
 
 		self.controller.make_nexus(filename=result)
 		self.controller.redraw(frame=1)
