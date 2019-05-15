@@ -268,7 +268,10 @@ class MainWindowController:
 
 	def documentation(self):
 		if platform.system().lower() == "darwin":
-			Popen(args=["open", "-a", "Preview", "Documentation.pdf"])
+			try:
+				Popen(args=["open", "-a", "Preview", "Documentation.pdf"])
+			except:
+				Popen(args=["open", "-a", "Preview", "data/Documentation.pdf"])
 		elif platform.system().lower() == "linux":
 			Popen(args=["xdg-open", "data/Documentation.pdf"])
 
