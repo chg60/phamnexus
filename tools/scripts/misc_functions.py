@@ -127,7 +127,8 @@ def get_database_phages(username, password, database, status):
 	elif status == 1:
 		try:
 			phages = []
-			query = "SELECT PhageID FROM phage WHERE status = 'final'"
+			query = "SELECT PhageID FROM phage WHERE status = 'final' OR " \
+					"status = 'gbk'"
 			con = pms.connect("localhost", username, password, database)
 			cur = con.cursor()
 			cur.execute(query)
@@ -182,8 +183,8 @@ def get_phams_by_host(username, password, database, host, status):
 			query = "SELECT * FROM (SELECT a.PhageID, c.name, a.status FROM " \
 					"phage AS a INNER JOIN gene AS b ON a.PhageID = b.PhageID" \
 					" INNER JOIN pham AS c ON b.GeneID = c.GeneID WHERE " \
-					"a.HostStrain = '{}' AND a.status = 'final') AS d ORDER " \
-					"BY d.PhageID ASC".format(host)
+					"a.HostStrain = '{}' AND a.status = 'final' OR a.status " \
+					"= 'gbk') AS d ORDER BY d.PhageID ASC".format(host)
 			con = pms.connect("localhost", username, password, database)
 			cur = con.cursor()
 			cur.execute(query)
@@ -258,19 +259,22 @@ def get_phams_by_cluster(username, password, database, cluster, status):
 						"FROM phage AS a INNER JOIN gene AS b ON a.PhageID " \
 						"= b.PhageID INNER JOIN pham AS c ON b.GeneID = " \
 						"c.GeneID WHERE a.Cluster is Null AND a.status = " \
-						"'final') AS d ORDER BY d.PhageID ASC".format(cluster)
+						"'final' OR status = 'gbk') AS d ORDER BY d.PhageID " \
+						"ASC".format(cluster)
 			elif cluster == "Unclustered":
 				query = "SELECT * FROM (SELECT a.PhageID, c.name, a.status " \
 						"FROM phage AS a INNER JOIN gene AS b ON a.PhageID " \
 						"= b.PhageID INNER JOIN pham AS c ON b.GeneID = " \
 						"c.GeneID WHERE a.Cluster = 'UNK' AND a.status = " \
-						"'final') AS d ORDER BY d.PhageID ASC".format(cluster)
+						"'final' OR status = 'gbk') AS d ORDER BY d.PhageID " \
+						"ASC".format(cluster)
 			else:
 				query = "SELECT * FROM (SELECT a.PhageID, c.name, a.status " \
 						"FROM phage AS a INNER JOIN gene AS b ON a.PhageID " \
 						"= b.PhageID INNER JOIN pham AS c ON b.GeneID = " \
 						"c.GeneID WHERE a.Cluster = '{}' AND a.status = " \
-						"'final') AS d ORDER BY d.PhageID ASC".format(cluster)
+						"'final' OR status = 'gbk') AS d ORDER BY d.PhageID " \
+						"ASC".format(cluster)
 
 			con = pms.connect("localhost", username, password, database)
 			cur = con.cursor()
