@@ -1,0 +1,6 @@
+{
+  "No MySQL": "No MySQL installation detected. Installation instructions can be found at https://dev.mysql.com/doc/refman/8.0/en/. This application is NOT compatible with MySQL versions higher than 8.0.15.",
+  "Incorrect Username or Password": "Incorrect username or password. Please verify your MySQL credentials and try again.",
+  "Too Many Failed Login Attempts": "Too many failed MySQL login attempts. The application will quit now.",
+  "Download Complete": "The updated application has been downloaded. To apply updates, quit this version and overwrite it with the new version."
+}
