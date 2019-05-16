@@ -105,7 +105,7 @@ class DatabaseUpdater:
 										 "{}?".format(self.database))
 		if check_updates is False:
 			return
-		
+
 		self.get_root_pw()
 		self.get_local_version()
 		self.get_remote_version()
