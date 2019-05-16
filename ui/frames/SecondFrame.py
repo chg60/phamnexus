@@ -1,5 +1,7 @@
 from tkinter import *
 
+from tools.objects.DatabaseUpdater import DatabaseUpdater
+
 
 class SecondFrame(Frame):
 	def __init__(self, root, controller):
@@ -44,6 +46,10 @@ class SecondFrame(Frame):
 	def next(self):
 		self.controller.selected_database = \
 			self.controller.available_databases[self.db_selection.get()]
+		updater = DatabaseUpdater(controller=self.controller,
+								  database=self.controller.selected_database)
+		updater.update_db()
+
 		self.controller.redraw(frame=3)
 
 	def back(self):

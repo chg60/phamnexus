@@ -4,7 +4,7 @@ from tkinter import *
 class GetMySQLUserPassDialog(Toplevel):
 	def __init__(self, controller):
 		super(GetMySQLUserPassDialog, self).__init__(master=None)
-		self.title("MySQL Credentials Dialog")
+		self.title("Enter MySQL Credentials")
 		x_offset = int(self.winfo_screenwidth() / 3)
 		y_offset = int(self.winfo_screenheight() / 3)
 		self.geometry("+{}+{}".format(x_offset, y_offset))
@@ -13,7 +13,8 @@ class GetMySQLUserPassDialog(Toplevel):
 		self.controller = controller
 
 		self.user_frame = Frame(master=self)
-		self.user_label = Label(master=self.user_frame, text="Username: ",
+		self.user_label = Label(master=self.user_frame, text="Admin "
+															 "Username: ",
 								font=("TkDefaultFont", 12))
 		self.user_label.pack(side=LEFT, anchor=W, expand=True, fill=None)
 		self.user_entry = Entry(master=self.user_frame,
@@ -22,7 +23,8 @@ class GetMySQLUserPassDialog(Toplevel):
 		self.user_frame.pack(side=TOP, fill=X)
 
 		self.pass_frame = Frame(master=self)
-		self.pass_label = Label(master=self.pass_frame, text="Password: ",
+		self.pass_label = Label(master=self.pass_frame, text="Admin "
+															 "Password: ",
 								font=("TkDefaultFont", 12))
 		self.pass_label.pack(side=LEFT, anchor=W, expand=True, fill=None)
 		self.pass_entry = Entry(master=self.pass_frame, show="*",
@@ -46,6 +48,6 @@ class GetMySQLUserPassDialog(Toplevel):
 			password = None
 		self.destroy()
 		# print(username, password)
-		self.controller.mysql_read_u = username
-		self.controller.mysql_read_p = password
+		self.controller.username = username
+		self.controller.password = password
 		return
