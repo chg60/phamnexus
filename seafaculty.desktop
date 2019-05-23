@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Name=PhameratorNexusBuilder
+Icon=/usr/share/pixmaps/python.xpm
+StartupNotify=true
+Path=/home/seafaculty/phamnexus/
+Exec=python3 __main__.py
+Categories=Application;Utility
