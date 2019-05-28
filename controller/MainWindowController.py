@@ -4,7 +4,8 @@ import platform
 import sys
 import tkinter as tk
 import tkinter.messagebox
-from subprocess import Popen
+import webbrowser
+
 from tkinter.messagebox import showinfo, askyesnocancel
 
 import requests
@@ -240,21 +241,42 @@ class MainWindowController:
 						 "machine.")
 
 	def documentation(self):
-		if platform.system().lower() == "darwin":
-			try:
-				Popen(args=["open", "-a", "Preview", "Documentation.pdf"])
-			except:
-				Popen(args=["open", "-a", "Preview", "data/Documentation.pdf"])
-		elif platform.system().lower() == "linux":
-			Popen(args=["xdg-open", "data/Documentation.pdf"])
+		response = askyesnocancel(title="Open Browser Window?",
+								  message="Do you want to launch this "
+										  "program's documentation in a "
+										  "web browser window?",
+								  default=tkinter.messagebox.CANCEL)
+		if response is None or response is False:
+			return
+
+		try:
+			webbrowser.open_new_tab("https://github.com/chg60/phamnexus/wiki")
+		except webbrowser.Error:
+			showinfo(title="Failed To Open Browser",
+					 message="Unable to open a browser window. Documentation "
+							 "can be found at "
+							 "https://github.com/chg60/phamnexus/wiki.")
 
 	def report_bug(self):
-		showinfo(title="Bug Report Info",
-				 message="Please email Christian at chg60@pitt.edu with a "
-						 "detailed description of the bug.  Include the "
-						 "button(s) pressed to get the behavior, what you "
-						 "were expecting to happen, and what actually "
-						 "happened.")
+		response = askyesnocancel(title="Open Browser Window?",
+								  message="Do you want to open a browser "
+										  "window where bug reports and "
+										  "feature requests can be made?",
+								  default=tkinter.messagebox.CANCEL)
+		if response is None or response is False:
+			return
+
+		try:
+			webbrowser.open_new_tab(
+				"https://github.com/chg60/phamnexus/issues/new")
+		except webbrowser.Error:
+			showinfo(title="Failed To Open Browser",
+					 message="Unable to open a browser window. Issues can be "
+							 "submitted at "
+							 "https://github.com/chg60/phamnexus/issues/new. "
+							 "Guidelines can be found at "
+							 "https://github.com/chg60/phamnexus/wiki/"
+							 "Recommendations-and-Bug-Reports.")
 
 	def quit(self):
 		response = tk.messagebox.askyesnocancel(title="Really quit?",
@@ -266,58 +288,3 @@ class MainWindowController:
 
 		self.window.destroy()
 		sys.exit(0)
-
-
-"""
-		# Create the Nexus strings for each phage. This is the bottleneck in
-		# the whole process
-		for phage in phages_and_phams.keys():
-			phams = phages_and_phams[phage]
-			nex_list = []
-			for pham in all_phams:
-				if pham in phams:
-					nex_list.append("1")
-				else:
-					nex_list.append("0")
-			phages_and_nex_strings[phage] = "".join(nex_list)
-
-		print("Created the nexus strings")
-
-		# Create the nexus file.
-		f = open(filename, "w")
-
-		# Write out header information.
-		f.write("#NEXUS\n")
-		f.write("BEGIN TAXA;\n")
-		f.write("\tdimensions ntax={};\n".format(len(phages_and_phams.keys())))
-		f.write("\ttaxlabels {};\n".format(" ".join(phages_and_phams.keys())))
-		f.write("END;\n")
-		f.write("BEGIN CHARACTERS;\n")
-		f.write("\tdimensions nchar={};\n".format(len(all_phams)))
-		f.write("\tformat datatype=standard missing=? gap=- matchchar=. "
-				"interleave;\n")
-		f.write("\tmatrix\n")
-
-		indices = range(0, len(all_phams), 100)
-		# print(indices[0:])
-		for i in range(len(indices)-1):
-			start = indices[i]
-			end = indices[i+1]
-			for phageid in phages_and_phams.keys():
-				string = phages_and_nex_strings[phageid][start:end]
-				line = '{:<27}\t{:>100}\n'.format(phageid, string)
-				f.write(line)
-			f.write("\n")
-		start = indices[-1]
-
-		for phageid in phages_and_phams.keys():
-			string = phages_and_nex_strings[phageid][start:]
-			line = '{:<27}\t{}\n'.format(phageid, string)
-			f.write(line)
-		f.write("\n;\nend;\n")
-		f.close()
-
-		showinfo(message="Your nexus file has been saved to {}".format(
-			filename))
-		return
-"""

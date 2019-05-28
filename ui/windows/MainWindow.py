@@ -13,6 +13,7 @@ class MainWindow:
 
 		self.root = Tk()
 		self.root.wm_title("PhameratorNexusBuilder")
+		self.root.protocol("WM_DELETE_WINDOW", self.controller.quit)
 
 		width, height = int(self.root.winfo_screenwidth() * 0.75), \
 						int(self.root.winfo_screenheight() * 0.75)
