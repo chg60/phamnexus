@@ -1,8 +1,10 @@
 from tkinter import *
 
-from ui.frames.FirstFrame import FirstFrame
-from ui.frames.SecondFrame import SecondFrame
-from ui.frames.ThirdFrame import ThirdFrame
+from ui.frames.RunmodeFrame import RunmodeFrame
+from ui.frames.DatabaseFrame import DatabaseFrame
+# from ui.frames.HostFrame import HostFrame
+# from ui.frames.ClusterFrame import ClusterFrame
+from ui.frames.PhageFrame import PhageFrame
 
 
 class MainWindow:
@@ -20,13 +22,20 @@ class MainWindow:
 		self.root.wm_geometry("{}x{}+{}+{}".format(width, height, x_offset,
 												   y_offset))
 
+		# Create menu bar
 		self.menu_bar = Menu(self.root, tearoff=0)
 		self.root.config(menu=self.menu_bar)
 
+		# Create file menu
 		self.file = Menu(self.menu_bar, tearoff=0)
+		self.file.add_command(label="Preferences",
+							  command=None)
+		# self.controller.edit_preferences)
+		self.file.add_separator()
 		self.file.add_command(label="Quit", command=self.controller.quit)
 		self.menu_bar.add_cascade(menu=self.file, label="File")
 
+		# Create help menu
 		self.help = Menu(self.menu_bar, tearoff=0)
 		self.help.add_command(label="Documentation",
 							  command=self.controller.documentation)
@@ -36,21 +45,23 @@ class MainWindow:
 							  command=self.controller.check_updates)
 		self.menu_bar.add_cascade(menu=self.help, label="Help")
 
-		self.layout = FirstFrame(root=self.root, controller=self.controller)
+		self.layout = RunmodeFrame(root=self.root, controller=self.controller)
 
 	def redraw(self, frame):
 		self.layout.destroy()
 		if frame == 1:
-			self.layout = FirstFrame(root=self.root,
+			self.layout = RunmodeFrame(root=self.root,
 									 controller=self.controller)
 		if frame == 2:
 			self.controller.get_mysql_dbs()
-			self.layout = SecondFrame(root=self.root,
+			self.layout = DatabaseFrame(root=self.root,
 									  controller=self.controller)
 		if frame == 3:
-			self.layout = ThirdFrame(root=self.root,
+			self.layout = PhageFrame(root=self.root,
 									 controller=self.controller)
-
+		if frame == 4:
+			self.layout = PhageFrame(root=self.root,
+									 controller=self.controller)
 
 	def launch(self):
 		self.root.mainloop()

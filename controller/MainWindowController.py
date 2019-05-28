@@ -9,6 +9,7 @@ from tkinter.messagebox import showinfo, askyesnocancel
 
 import requests
 
+from tools.objects.NexusHandler import NexusHandler
 from tools.scripts.misc_functions import *
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
 from ui.windows.MainWindow import MainWindow
@@ -16,6 +17,13 @@ from ui.windows.MainWindow import MainWindow
 
 class MainWindowController:
 	def __init__(self):
+		# TODO load application preferences
+		# TODO write function to read application preferences
+		# TODO write function to save application preferences
+		# TODO write dialog to modify application preferences
+		# TODO write Host selection Frame
+		# TODO write Cluster selection Frame
+
 		# Error messages
 		try:
 			with open("errors.json", "r") as fh:
@@ -177,57 +185,13 @@ class MainWindowController:
 		print("{} phages have {} phams".format(len(phages_and_phams),
 											   len(all_phams)))
 
-		# Create the Nexus strings for each phage. This is the bottleneck in
-		# the whole process
-		for phage in phages_and_phams.keys():
-			phams = phages_and_phams[phage]
-			nex_list = []
-			for pham in all_phams:
-				if pham in phams:
-					nex_list.append("1")
-				else:
-					nex_list.append("0")
-			phages_and_nex_strings[phage] = "".join(nex_list)
+		# Create the Nexus strings
+		nexus_handler = NexusHandler(phages_and_phams, all_phams, filename)
+		nexus_handler.write_nexus_file()
 
-		print("Created the nexus strings")
-
-		# Create the nexus file.
-		f = open(filename, "w")
-
-		# Write out header information.
-		f.write("#NEXUS\n")
-		f.write("BEGIN TAXA;\n")
-		f.write("\tdimensions ntax={};\n".format(len(phages_and_phams.keys())))
-		f.write("\ttaxlabels {};\n".format(" ".join(phages_and_phams.keys())))
-		f.write("END;\n")
-		f.write("BEGIN CHARACTERS;\n")
-		f.write("\tdimensions nchar={};\n".format(len(all_phams)))
-		f.write("\tformat datatype=standard missing=? gap=- matchchar=. "
-				"interleave;\n")
-		f.write("\tmatrix\n")
-
-		indices = range(0, len(all_phams), 100)
-		# print(indices[0:])
-		for i in range(len(indices)-1):
-			start = indices[i]
-			end = indices[i+1]
-			for phageid in phages_and_phams.keys():
-				string = phages_and_nex_strings[phageid][start:end]
-				line = '{:<27}\t{:>100}\n'.format(phageid, string)
-				f.write(line)
-			f.write("\n")
-		start = indices[-1]
-
-		for phageid in phages_and_phams.keys():
-			string = phages_and_nex_strings[phageid][start:]
-			line = '{:<27}\t{}\n'.format(phageid, string)
-			f.write(line)
-		f.write("\n;\nend;\n")
-		f.close()
-
-		showinfo(message="Your nexus file has been saved to {}".format(
-			filename))
-		return
+		# Cleanup the handler in case someone runs the program multiple ways
+		# in a row
+		del nexus_handler
 
 	def check_updates(self):
 		# local version
@@ -298,3 +262,57 @@ class MainWindowController:
 		self.window.destroy()
 		sys.exit(0)
 
+
+"""
+		# Create the Nexus strings for each phage. This is the bottleneck in
+		# the whole process
+		for phage in phages_and_phams.keys():
+			phams = phages_and_phams[phage]
+			nex_list = []
+			for pham in all_phams:
+				if pham in phams:
+					nex_list.append("1")
+				else:
+					nex_list.append("0")
+			phages_and_nex_strings[phage] = "".join(nex_list)
+
+		print("Created the nexus strings")
+
+		# Create the nexus file.
+		f = open(filename, "w")
+
+		# Write out header information.
+		f.write("#NEXUS\n")
+		f.write("BEGIN TAXA;\n")
+		f.write("\tdimensions ntax={};\n".format(len(phages_and_phams.keys())))
+		f.write("\ttaxlabels {};\n".format(" ".join(phages_and_phams.keys())))
+		f.write("END;\n")
+		f.write("BEGIN CHARACTERS;\n")
+		f.write("\tdimensions nchar={};\n".format(len(all_phams)))
+		f.write("\tformat datatype=standard missing=? gap=- matchchar=. "
+				"interleave;\n")
+		f.write("\tmatrix\n")
+
+		indices = range(0, len(all_phams), 100)
+		# print(indices[0:])
+		for i in range(len(indices)-1):
+			start = indices[i]
+			end = indices[i+1]
+			for phageid in phages_and_phams.keys():
+				string = phages_and_nex_strings[phageid][start:end]
+				line = '{:<27}\t{:>100}\n'.format(phageid, string)
+				f.write(line)
+			f.write("\n")
+		start = indices[-1]
+
+		for phageid in phages_and_phams.keys():
+			string = phages_and_nex_strings[phageid][start:]
+			line = '{:<27}\t{}\n'.format(phageid, string)
+			f.write(line)
+		f.write("\n;\nend;\n")
+		f.close()
+
+		showinfo(message="Your nexus file has been saved to {}".format(
+			filename))
+		return
+"""
