@@ -193,6 +193,11 @@ class MainWindowController:
 		# in a row
 		del nexus_handler
 
+		# Show message so user knows their job is done
+		showinfo("Nexus file complete", "The nexus file containing your "
+										"selected phages and their pham "
+										"information is done being written")
+
 	def check_updates(self):
 		# local version
 		try:
