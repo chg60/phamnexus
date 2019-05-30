@@ -39,7 +39,7 @@ class MainWindowController:
 		self.u_p_valid = False
 
 		# MySQL databases available for use
-		self.available_databases = []
+		self.available_databases = list()
 		self.selected_database = None
 
 		# Remember user options for this session
@@ -47,33 +47,53 @@ class MainWindowController:
 		self.runmode = None
 		self.final_status = None
 
-		self.available_hosts = []
-		self.selected_hosts = []
+		self.metadata = None
 
-		self.available_clusters = []
-		self.selected_clusters = []
+		self.available_hosts = list()
+		self.selected_hosts = list()
 
-		self.available_phages = []
-		self.selected_phages = []
+		self.available_clusters = list()
+		self.selected_clusters = list()
+
+		self.available_phages = list()
+		self.selected_phages = list()
 
 		# Launch main window
 		self.window = MainWindow(controller=self)
 		self.window.launch()
 
+	def set_username(self, username=None):
+		self.username = username
+
+	def set_password(self, password=None):
+		self.password = password
+
+	def set_u_p_valid(self, bool=False):
+		self.u_p_valid = bool
+
+	def set_metadata(self, dataframe):
+		self.metadata = dataframe
+
+	def refresh_available_hosts(self):
+		self.available_hosts = sorted(list(set(self.metadata["HostStrain"])))
+
+	def refresh_available_clusters(self):
+		self.available_clusters = sorted(list(set(self.metadata["Cluster"])))
+
+	def refresh_available_phages(self):
+		self.available_phages = sorted(list(set(self.metadata["PhageID"])))
+
 	def validate_credentials(self):
 		# While u_p_valid flag is set to False
 		while not self.u_p_valid:
-			# Username and password remain unchanged if valid, but get set
-			# to None and None if invalid.
-			self.username, self.password = validate_mysql_credentials(
-				self.username, self.password)
-			# If username and password are not None, we know the credentials
-			# are valid, and can set the u_p_valid flag to True, breaking
-			# out of the while loop.
-			if self.username is not None and self.password is not None:
-				self.u_p_valid = True
-			# Otherwise, we need to retrieve valid credentials to test,
-			# and remain in the loop.
+			username, password = validate_mysql_credentials(self.username,
+															self.password)
+			# Username and password will not be None if valid
+			if username is not None and password is not None:
+				self.set_username(username)
+				self.set_password(password)
+				self.set_u_p_valid(True)
+			# Username and password will be None if invalid... get new
 			else:
 				GetMySQLUserPassDialog(self).wait_window()
 
@@ -99,7 +119,62 @@ class MainWindowController:
 				self.available_databases.append(database)
 		return
 
-	def redraw(self, frame):
+	def get_metadata(self):
+		"""
+		Connects to MySQL using verified username, password, and a database
+		and queries for PhageID, HostStrain, Cluster, status from phage
+		table. Creates a pandas DataFrame object from the results for
+		simpler data handling on the backend of the application.
+		"""
+		# Initialize variables to use with MySQL
+		username = self.username
+		password = self.password
+		database = self.selected_database
+
+		# Initialize metadata storage variable
+		metadata = {"PhageID": list(),
+					"HostStrain": list(),
+					"Cluster": list(),
+					"Status": list()}
+
+		# Try executing the query
+		try:
+			query = "SELECT PhageID, HostStrain, Cluster, status FROM phage"
+			connection = pms.connect("localhost", username, password, database)
+			cursor = connection.cursor()
+			cursor.execute(query)
+			results = cursor.fetchall()
+			connection.close()
+			for result in results:
+				if result[2] == "UNK":
+					metadata["PhageID"].append(result[0])
+					metadata["HostStrain"].append(result[1])
+					metadata["Cluster"].append("Unclustered")
+					metadata["Status"].append(result[3])
+				elif result[2] is None:
+					metadata["PhageID"].append(result[0])
+					metadata["HostStrain"].append(result[1])
+					metadata["Cluster"].append("Singleton")
+					metadata["Status"].append(result[3])
+				else:
+					metadata["PhageID"].append(result[0])
+					metadata["HostStrain"].append(result[1])
+					metadata["Cluster"].append(result[2])
+					metadata["Status"].append(result[3])
+
+		# If anything fails with MySQL, return an empty initialized dataframe
+		except pms.err.Error as err:
+			print(err)
+			metadata = {"PhageID": list(), "HostStrain": list(),
+						"Cluster": list(), "Status": list()}
+
+		self.set_metadata(metadata)
+		self.refresh_available_hosts()
+		self.refresh_available_clusters()
+		self.refresh_available_phages()
+		return
+
+	def redraw_window(self, frame):
 		self.window.redraw(frame=frame)
 
 	def make_nexus(self, filename):
@@ -110,75 +185,27 @@ class MainWindowController:
 		:param filename: name of the nexus file to be written.
 		:return:
 		"""
-		all_phams = []
-		phages_and_phams = {}
-		phages_and_nex_strings = {}
+		all_phams = list()
+		phages_and_phams = dict()
 
-		# If runmode is 0, select phage/pham data based on selected hosts.
-		if self.runmode == 0:
-			# Populate the queue with selected hosts
-			query_queue = self.selected_hosts
-			# While there's still something in the queue
-			while len(query_queue) > 0:
-				# Grab the first item in the queue and use it as this
-				# query's host.
-				host = query_queue.pop(0)
-				# Results dictionary will have [1, n] keys at a time,
-				# so process with a for loop.
-				results = get_phams_by_host(username=self.username,
-											password=self.password,
-											database=self.selected_database,
-											host=host,
-											status=self.final_status)
-				for phageid in results.keys():
-					phams = results[phageid]
-					phages_and_phams[phageid] = phams
-					for pham in phams:
-						all_phams.append(pham)
-
-		# If runmode is 1, select phage/pham data based on selected clusters.
-		elif self.runmode == 1:
-			# Populate the queue with selected clusters.
-			query_queue = self.selected_clusters
-			# While there's still something in the queue
-			while len(query_queue) > 0:
-				# Grab the first item in the queue and use it as this
-				# query's cluster.
-				cluster = query_queue.pop(0)
-				# Results dictionary will have [1, n] keys at a time,
-				# so process with a for loop.
-				results = get_phams_by_cluster(username=self.username,
-											   password=self.password,
-											   database=self.selected_database,
-											   cluster=cluster,
-											   status=self.final_status)
-				for phageid in results.keys():
-					phams = results[phageid]
-					phages_and_phams[phageid] = phams
-					for pham in phams:
-						all_phams.append(pham)
-
-		# If runmode is 2, 3, or 4, select phage/pham data based on selected
-		# phages.
-		elif self.runmode == 2 or self.runmode == 3 or self.runmode == 4:
-			# Populate the queue with selected phages.
-			query_queue = self.selected_phages
-			# While there's still something in the queue
-			while len(query_queue) > 0:
-				# Grab the first item in the queue and use it as this
-				# query's phage.
-				phage = query_queue.pop(0)
-				# Results dictionary will only have 1 key at a time, but for
-				# simplicity, processing is done the same as other runmodes.
-				results = get_phams_by_phage(username=self.username,
-											 password=self.password,
-											 database=self.selected_database,
-											 phage=phage)
-				for phageid in results.keys():
-					phams = results[phageid]
-					phages_and_phams[phageid] = phams
-					for pham in phams:
-						all_phams.append(pham)
+		# Populate the queue with selected phages.
+		query_queue = self.selected_phages
+		# While there's still something in the queue
+		while len(query_queue) > 0:
+			# Grab the first item in the queue and use it as this
+			# query's phage.
+			phage = query_queue.pop(0)
+			# Results dictionary will only have 1 key at a time, but for
+			# simplicity, processing is done the same as other runmodes.
+			results = get_phams_by_phage(username=self.username,
+										 password=self.password,
+										 database=self.selected_database,
+										 phage=phage)
+			for phageid in results.keys():
+				phams = results[phageid]
+				phages_and_phams[phageid] = phams
+				for pham in phams:
+					all_phams.append(pham)
 
 		# List of all_phams is non-unique; fix that, and sort the list.
 		all_phams = sorted(list(set(all_phams)))

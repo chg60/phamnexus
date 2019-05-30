@@ -1,9 +1,9 @@
 from tkinter import *
 
 
-class RunmodeFrame(Frame):
+class ChooseRunmode(Frame):
 	def __init__(self, root, controller):
-		super(RunmodeFrame, self).__init__(master=root)
+		super(ChooseRunmode, self).__init__(master=root)
 		self.pack(expand=True, fill=BOTH)
 
 		self.controller = controller
@@ -56,4 +56,4 @@ class RunmodeFrame(Frame):
 	def next(self):
 		self.controller.runmode = self.runmode_selection.get()
 		self.controller.final_status = self.final_only.get()
-		self.controller.redraw(frame=2)
+		self.controller.redraw_window(frame=2)

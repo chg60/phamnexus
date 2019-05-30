@@ -48,7 +48,8 @@ class NexusHandler:
 		f.write("#NEXUS\n")
 		f.write("BEGIN TAXA;\n")
 		f.write("\tdimensions ntax={};\n".format(len(self.dictionary.keys())))
-		f.write("\ttaxlabels {};\n".format(" ".join(self.dictionary.keys())))
+		f.write("\ttaxlabels {};\n".format(" ".join([phage[0] for phage in
+													 self.done_list])))
 		f.write("END;\n")
 		f.write("BEGIN CHARACTERS;\n")
 		f.write("\tdimensions nchar={};\n".format(len(self.all_phams)))

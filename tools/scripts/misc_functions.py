@@ -141,6 +141,37 @@ def get_database_phages(username, password, database, status):
 			return
 
 
+def get_host_and_cluster_by_phageid(username, password, database, phageid):
+	"""
+	Connects to MySQL using verified username, password, and a database
+	and queries for the host for the input phageid
+	:param username: verified MySQL username
+	:param password: verified MySQL password
+	:param database: selected MySQL database
+	:param phageid: phage whose host is requested
+	:return: phageid, host, cluster
+	"""
+	try:
+		query = "SELECT HostStrain, Cluster FROM phage WHERE PhageID = " \
+				"'{}'".format(phageid)
+		con = pms.connect("localhost", username, password, database)
+		cur = con.cursor()
+		cur.execute(query)
+		results = cur.fetchall()
+		con.close()
+		host = results[0][0]
+		cluster = results[0][1]
+		if cluster is None:
+			return phageid, host, "Singleton"
+		elif cluster == "UNK":
+			return phageid, host, "Unclustered"
+		else:
+			return phageid, host, cluster
+	except pms.err.Error as err:
+		print(err)
+		return
+
+
 def get_phams_by_host(username, password, database, host, status):
 	"""
 	Connects to MySQL using verified username, password, and a database

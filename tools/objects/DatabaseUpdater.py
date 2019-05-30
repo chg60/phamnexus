@@ -23,6 +23,7 @@ class DatabaseUpdater:
 		"""
 		self.controller = controller
 
+		self.attempts_left = 3
 		self.username = None
 		self.password = None
 		self.credentials_valid = False
@@ -38,16 +39,21 @@ class DatabaseUpdater:
 	def get_root_pw(self):
 		"""
 		Checks that the username and password are valid - if they are
-		not, prompts the user it input admin username and password.
+		not, prompts the user it input admin username and password up to
+		self.attempts_left times (default 3).
 		"""
-		while not self.credentials_valid:
+		while not self.credentials_valid and self.attempts_left > 0:
 			self.username, self.password = validate_mysql_credentials(
 				self.username, self.password)
 			if self.username is not None and self.password is not None:
 				self.credentials_valid = True
+				return 0
 			else:
 				GetMySQLUserPassDialog(self).wait_window()
-		return
+				self.attempts_left -= 1
+		if self.attempts_left == 0 and not self.credentials_valid:
+			self.skip_update()
+		return 1
 
 	def get_local_version(self):
 		"""
@@ -93,23 +99,32 @@ class DatabaseUpdater:
 		self.remote_version = remote_version
 		return
 
-	def update_db(self):
+	def ask_update_db(self):
 		"""
-		Attempts to retrieve and import the remote .sql file if the
-		local version is lower than the remote version. Otherwise,
-		indicates that no updates are available.
+		Launches a tkinter.messagebox.askyesno window asking if user
+		wants to check for updates to the selected database.
+		:return: True, False
 		"""
 		check_updates = askyesno(title="Check for Updates?",
 								 message="Do you want to check the Hatfull "
 										 "server for the newest version of "
 										 "{}?".format(self.database))
-		if check_updates is False:
-			return
+		return check_updates
 
-		self.get_root_pw()
+	def do_update_db(self):
+		"""
+		Attempts to retrieve and import the remote .sql file if the
+		local version is lower than the remote version. Otherwise,
+		indicates that no updates are available.
+		"""
+		password_status = self.get_root_pw()
+		if password_status == 1:		# username/password verification failed
+			print("Bad username/password. Skipping database updates.")
+			return
+		
 		self.get_local_version()
 		self.get_remote_version()
-		print(self.local_version, self.remote_version)
+
 		if self.local_version < self.remote_version:
 			get_updates = askyesno(title="Updates Available",
 								   message="The Hatfull server version for "
@@ -146,3 +161,12 @@ class DatabaseUpdater:
 					 message="There are no updates available for {} right "
 							 "now.".format(self.database))
 			return
+
+	def skip_update(self):
+		showinfo(title="Too Many Login Attempts",
+				 message="To discourage malicious actors from attempting "
+						 "to learn your MySQL login info, database "
+						 "updates will be skipped for now. Please verify "
+						 "your MySQL login information and try again "
+						 "later.")
+		return

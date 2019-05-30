@@ -3,9 +3,9 @@ from tkinter import *
 from tools.objects.DatabaseUpdater import DatabaseUpdater
 
 
-class DatabaseFrame(Frame):
+class ChooseDatabase(Frame):
 	def __init__(self, root, controller):
-		super(DatabaseFrame, self).__init__(master=root)
+		super(ChooseDatabase, self).__init__(master=root)
 		self.pack(expand=True, fill=BOTH)
 
 		self.controller = controller
@@ -48,9 +48,12 @@ class DatabaseFrame(Frame):
 			self.controller.available_databases[self.db_selection.get()]
 		updater = DatabaseUpdater(controller=self.controller,
 								  database=self.controller.selected_database)
-		updater.update_db()
+		response = updater.ask_update_db()
+		if response is True:
+			updater.do_update_db()
 
-		self.controller.redraw(frame=3)
+		self.controller.get_metadata()
+		self.controller.redraw_window(frame=int(3 + self.controller.runmode))
 
 	def back(self):
-		self.controller.redraw(frame=1)
+		self.controller.redraw_window(frame=1)

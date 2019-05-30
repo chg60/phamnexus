@@ -1,10 +1,10 @@
 from tkinter import *
 
-from ui.frames.RunmodeFrame import RunmodeFrame
-from ui.frames.DatabaseFrame import DatabaseFrame
-# from ui.frames.HostFrame import HostFrame
-# from ui.frames.ClusterFrame import ClusterFrame
-from ui.frames.PhageFrame import PhageFrame
+from ui.frames.ChooseRunmode import ChooseRunmode
+from ui.frames.ChooseDatabase import ChooseDatabase
+from ui.frames.ChooseHost import ChooseHost
+from ui.frames.ChooseCluster import ChooseCluster
+from ui.frames.FinalizePhage import FinalizePhage
 
 
 class MainWindow:
@@ -15,8 +15,8 @@ class MainWindow:
 		self.root.wm_title("PhameratorNexusBuilder")
 		self.root.protocol("WM_DELETE_WINDOW", self.controller.quit)
 
-		width, height = int(self.root.winfo_screenwidth() * 0.75), \
-						int(self.root.winfo_screenheight() * 0.75)
+		width, height = int(self.root.winfo_screenwidth()), \
+						int(self.root.winfo_screenheight())
 		x_offset = int((self.root.winfo_screenwidth() - width) / 2)
 		y_offset = int((self.root.winfo_screenheight() - height) / 2)
 
@@ -46,23 +46,26 @@ class MainWindow:
 							  command=self.controller.check_updates)
 		self.menu_bar.add_cascade(menu=self.help, label="Help")
 
-		self.layout = RunmodeFrame(root=self.root, controller=self.controller)
+		self.layout = ChooseRunmode(root=self.root, controller=self.controller)
 
 	def redraw(self, frame):
 		self.layout.destroy()
 		if frame == 1:
-			self.layout = RunmodeFrame(root=self.root,
-									 controller=self.controller)
-		if frame == 2:
+			self.layout = ChooseRunmode(root=self.root,
+										controller=self.controller)
+		elif frame == 2:
 			self.controller.get_mysql_dbs()
-			self.layout = DatabaseFrame(root=self.root,
-									  controller=self.controller)
-		if frame == 3:
-			self.layout = PhageFrame(root=self.root,
+			self.layout = ChooseDatabase(root=self.root,
+										 controller=self.controller)
+		elif frame == 3:
+			self.layout = ChooseHost(root=self.root,
 									 controller=self.controller)
-		if frame == 4:
-			self.layout = PhageFrame(root=self.root,
-									 controller=self.controller)
+		elif frame == 4:
+			self.layout = ChooseCluster(root=self.root,
+										controller=self.controller)
+		elif frame == 5 or frame == 6 or frame == 7:
+			self.layout = FinalizePhage(root=self.root,
+										controller=self.controller)
 
 	def launch(self):
 		self.root.mainloop()
