@@ -244,10 +244,7 @@ class MainWindowController:
 		if remote_version > local_version:
 			update = askyesnocancel(title="Updates Available",
 									message="Updates are available. Would you "
-											"like to download them now? This "
-											"should take a few seconds, and "
-											"the new application will be found"
-											" in your Downloads folder.")
+											"like to download them now?")
 		else:
 			showinfo(title="No Updates Available",
 					 message="There are no updates available at this time.")
