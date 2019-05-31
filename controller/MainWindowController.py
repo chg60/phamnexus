@@ -9,7 +9,8 @@ import webbrowser
 from tkinter.messagebox import showinfo, askyesnocancel
 
 import requests
-import _cffi_backend
+if platform.system().lower() == "darwin":
+	import _cffi_backend
 
 from tools.objects.NexusHandler import NexusHandler
 from tools.scripts.misc_functions import *
