@@ -9,6 +9,7 @@ import webbrowser
 from tkinter.messagebox import showinfo, askyesnocancel
 
 import requests
+import _cffi_backend
 
 from tools.objects.NexusHandler import NexusHandler
 from tools.scripts.misc_functions import *
@@ -261,11 +262,59 @@ class MainWindowController:
 				showinfo(title="Download Complete",
 						 message=self.messages["Download Complete"])
 			else:
-				showinfo("This feature hasn't yet been completed for your "
-						 "system.  Updates can be retrieved by downloading "
-						 "the updated git repository ("
-						 "https://github.com/chg60/phamnexus.git) to your "
-						 "machine.")
+				try_git = askyesnocancel(title="Update with Git?",
+										 message="Would you like updates to "
+												 "be attempted using git?",
+										 default=tkinter.messagebox.CANCEL)
+				if try_git is None:
+					return
+				elif try_git is False:
+					try_manual = askyesnocancel(title="Update Manually?",
+												message="Would you like to "
+														"download updates "
+														"manually?")
+					if try_manual is None or try_manual is False:
+						return
+					else:
+						try:
+							webbrowser.open_new_tab(
+								"https://github.com/chg60/phamnexus")
+						except webbrowser.Error:
+							showinfo(title="Failed To Open Browser",
+									 message="Unable to open a browser "
+											 "window. The repository "
+											 "can be downloaded from "
+											 "https://github.com/chg60/phamnexus")
+
+				elif try_git is True:
+					try:
+						os.system("git remote update; git pull")
+						showinfo(title="Updates Downloaded",
+								 message="Updates were successfully "
+										 "downloaded. Close application and "
+										 "restart it to apply updates.")
+					except OSError:
+						showinfo(title="Update Failure",
+								 message="Updates couldn't be retrieved "
+										 "automatically.")
+						try_manual = askyesnocancel(title="Update Manually?",
+													message="Would you like "
+															"to download "
+															"updates "
+															"manually?")
+						if try_manual is None or try_manual is False:
+							return
+						else:
+							try:
+								webbrowser.open_new_tab(
+									"https://github.com/chg60/phamnexus")
+							except webbrowser.Error:
+								showinfo(title="Failed To Open Browser",
+										 message="Unable to open a browser "
+												 "window. The repository "
+												 "can be downloaded from "
+												 "https://github.com/chg60/phamnexus")
+		return
 
 	def documentation(self):
 		response = askyesnocancel(title="Open Browser Window?",

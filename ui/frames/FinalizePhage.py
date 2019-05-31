@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter.filedialog import asksaveasfilename
 from tkinter.messagebox import showinfo
-from tools.scripts.misc_functions import *
 import random
 
 
@@ -742,7 +741,13 @@ class FinalizePhage(Frame):
 		for i in sel:
 			add_name = self.available_phages[i]
 			if add_name not in self.selected_list.get(0, END):
-				self.selected_list.insert(END, add_name)
+				host = self.metadata["HostStrain"][self.phage_index[add_name]]
+				cluster = self.metadata["Cluster"][self.phage_index[add_name]]
+				status = self.metadata["Status"][self.phage_index[add_name]]
+				add = "\t({}, {}, {})".format(host, cluster, status)
+				display = "".join(["{:<20}".format(add_name), "{:<40}".format(
+					add)])
+				self.selected_list.insert(END, display)
 		return
 
 	def remove(self):
