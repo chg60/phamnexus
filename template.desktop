@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Terminal=false
-Name=PhameratorNexusBuilder
-Icon=/usr/share/pixmaps/python.xpm
+Name=PhamNexus
+Icon=/home/christian/PycharmProjects/phamnexus/img/icon.svg
 StartupNotify=true
 Path=/home/christian/PycharmProjects/phamnexus/
 Exec=python3 __main__.py

@@ -10,9 +10,10 @@ from ui.frames.FinalizePhage import FinalizePhage
 class MainWindow:
 	def __init__(self, controller):
 		self.controller = controller
-
 		self.root = Tk()
-		self.root.wm_title("PhameratorNexusBuilder")
+		self.root.tk.call('wm', 'iconphoto', self.root._w, PhotoImage(
+			file="img/icon.gif"))
+		self.root.wm_title("PhamNexus")
 		self.root.protocol("WM_DELETE_WINDOW", self.controller.quit)
 
 		width, height = int(self.root.winfo_screenwidth()), \
