@@ -8,15 +8,15 @@ import tkinter as tk
 
 from tkinter.messagebox import showinfo, askyesnocancel
 
-if platform.system().lower() == "darwin":
-    import _cffi_backend
-
 from tools.objects.MySQLConnectionHandler import MySQLConnectionHandler
 from tools.objects.NexusHandler import NexusHandler
 from tools.scripts.misc_functions import *
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
 from ui.windows.MainWindow import MainWindow
 from data.constants import *
+
+if platform.system().lower() == "darwin":
+    import _cffi_backend
 
 
 class MainWindowController:
