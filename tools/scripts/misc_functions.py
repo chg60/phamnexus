@@ -1,60 +1,111 @@
-import pymysql as pms
-from tools.objects.MySQLConnectionHandler import MySQLConnectionHandler
+from data.constants import *
+import os
+import shlex
+from subprocess import Popen
 
 
-def validate_mysql_credentials(username, password):
-	"""
-	Tests input username and password to see if a successful MySQL
-	connection can be made using them.  If yes, close the connection and
-	return the given username and password.  Else, close the connection
-	and return None and None.
-	:param username: MySQL username to be tested
-	:param password: MySQL password to be tested
-	:return: (username, password) or (None, None)
-	"""
-	temp_handler = MySQLConnectionHandler(username, password)
-	temp_handler.test_username_and_password()
-	if temp_handler.successful_login is True:
-		del temp_handler
-		return username, password
-	else:
-		del temp_handler
-		return None, None
 
-
-def get_database_names(username, password):
+def get_database_names(handler):
 	"""
 	Connects to MySQL using verified username and password and queries
 	for all databases the user has access to.
-	:param username: verified MySQL username
-	:param password: verified MySQL password
-	:return databases: list of MySQL databases that the verified user
-	has access to.
+	:param handler: MySQLConnectionHandler instance
+	:return: List of databases parsed from returned results
 	"""
+	# Initialize list to store results
+	databases = list()
+	# Query to give MySQLConnectionHandler
+	query = "SELECT DATABASES"
+
 	try:
-		databases = []
-		connection = pms.connect("localhost", username, password)
-		cursor = connection.cursor()
-		cursor.execute("SHOW DATABASES")
-		results = cursor.fetchall()
+		handler.open_connection()
+		results = handler.execute_query(query)
 		for result in results:
-			databases.append(result[0])
-		connection.close()
-		return databases
-	except pms.err.Error:  # as err:
-		# print("Error {}: {}".format(err.args[0], err.args[1]))
-		return
+			if result["Database"] not in IGNORE_DBS:
+				databases.append(result["Database"])
+		handler.close_connection()
+	except:
+		handler.close_connection()
+
+	# Sort the database list, then return it
+	databases.sort()
+	return databases
 
 
-def get_database_hosts(username, password, database):
+def get_metadata(handler):
+	"""
+
+	:param handler:
+	:return:
+	"""
+	# Initialize metadata dictionary
+	metadata = {"PhageID": list(), "HostStrain": list(),
+				"Cluster": list(), "Subcluster": list(), "Status": list()}
+	# Query for MySQL
+	query = "SELECT PhageID, HostStrain, Cluster2, Subcluster2, status FROM " \
+			"phage"
+
+	try:
+		handler.open_connection()
+		results = handler.execute_query(query)
+		for result in results:
+			metadata["PhageID"].append(result["PhageID"])
+			metadata["HostStrain"].append(result["HostStrain"])
+			if result["Cluster2"] is None:
+				metadata["Cluster"].append("Singleton")
+				metadata["Subcluster"].append("Singleton")
+			elif result["Cluster2"] == "UNK":
+				metadata["Cluster"].append("Un-clustered")
+				metadata["Subcluster"].append("Un-clustered")
+			elif result["Subcluster2"] is None:
+				metadata["Cluster"].append(result["Cluster2"])
+				metadata["Subcluster"].append("Un-subclustered")
+			else:
+				metadata["Cluster"].append(result["Cluster2"])
+				metadata["Subcluster"].append(result["Subcluster2"])
+			metadata["Status"].append(result["status"])
+		handler.close_connection()
+	except:
+		handler.close_connection()
+
+	return metadata
+
+
+def update_mac_application(version):
+	"""
+	Downloads Mac App bundle from github, unzips it, and discards the
+	zip file.
+	:param version: The version string of the Mac App bundle to get
+	:return: 0 if success, 1 if any fail
+	"""
+	# Download will be put in user's Downloads folder
+	download_dir = os.path.expanduser("~") + "/Downloads/"
+	commands = [
+		"curl -L {} {}/MacOS-version{}.zip".format(GIT_APP.format(version),
+												   download_dir, version),
+		"unzip {}/MacOS-version{}.zip -d {}".format(download_dir, version,
+													download_dir),
+		"rm {}/MacOS-version{}.zip".format(download_dir, version)]
+
+	# Iterate through, process, and run each command as a subprocess
+	try:
+		for command in commands:
+			command = shlex.split(command)
+			Popen(args=command).wait()
+		return 0
+	except OSError:
+		return 1
+
+
+def get_database_hosts(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all the hosts in that database.
-	:param username: verified MySQL username
-	:param password: verified MySQL password
-	:param database: selected MySQL database
-	:return hosts: list of hosts in the selected database
+	:param handler: MySQLConnectionHandler instance
+	:return: List of hosts returned by
 	"""
+	hosts = list()
+
 	try:
 		hosts = list()
 		connection = pms.connect("localhost", username, password, database)
@@ -69,7 +120,7 @@ def get_database_hosts(username, password, database):
 		return
 
 
-def get_database_clusters(username, password, database):
+def get_database_clusters(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all the clusters in that database.
@@ -97,7 +148,7 @@ def get_database_clusters(username, password, database):
 		return
 
 
-def get_database_phages(username, password, database, status):
+def get_database_phages(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all the phages in the database matching the desired
@@ -141,7 +192,7 @@ def get_database_phages(username, password, database, status):
 			return
 
 
-def get_host_and_cluster_by_phageid(username, password, database, phageid):
+def get_host_and_cluster_by_phageid(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for the host for the input phageid
@@ -172,7 +223,7 @@ def get_host_and_cluster_by_phageid(username, password, database, phageid):
 		return
 
 
-def get_phams_by_host(username, password, database, host, status):
+def get_phams_by_host(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all phages and phams in the database matching the
@@ -231,7 +282,7 @@ def get_phams_by_host(username, password, database, host, status):
 			return
 
 
-def get_phams_by_cluster(username, password, database, cluster, status):
+def get_phams_by_cluster(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all phages and phams in the database matching the
@@ -322,7 +373,7 @@ def get_phams_by_cluster(username, password, database, cluster, status):
 			return
 
 
-def get_phams_by_phage(username, password, database, phage):
+def get_phams_by_phage(handler):
 	"""
 	Connects to MySQL using verified username, password, and a database
 	and queries for all phages and phams in the database matching the
