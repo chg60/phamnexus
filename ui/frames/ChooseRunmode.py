@@ -24,15 +24,17 @@ class ChooseRunmode(Frame):
 		self.viewer = Frame(self)
 
 		self.prompt_frame = Frame(self.viewer)
-		self.prompt_label = Label(self.prompt_frame, text="1. Which type of "
-														  "pham data do you "
-														  "want to retrieve?")
+		self.prompt_label = Label(self.prompt_frame,
+								  text="1. Which type of pham data do you "
+									   "want to retrieve?",
+								  font=self.controller.font)
 		self.prompt_label.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 		for i in range(len(runmodes)):
 			temp_radio = Radiobutton(master=self.prompt_frame,
 									 variable=self.runmode_selection,
-									 value=i, text=runmodes[i])
+									 value=i, text=runmodes[i],
+									 font=self.controller.font)
 			temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 		self.prompt_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
@@ -40,13 +42,15 @@ class ChooseRunmode(Frame):
 		self.final_only_frame = Frame(self.viewer)
 		self.final_only_checkbox = Checkbutton(master=self.final_only_frame,
 											   variable=self.final_only,
-											   text="Exclude draft genomes")
+											   text="Exclude draft genomes",
+											   font=self.controller.font)
 		self.final_only_checkbox.pack(side=TOP, anchor=NW, fill=None,
 									  expand=True)
 		self.final_only_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
 
 		self.button_frame = Frame(self.viewer)
 		self.next_button = Button(self.button_frame, text="Next",
+								  font=self.controller.font,
 								  command=self.next)
 		self.next_button.pack(side=BOTTOM, anchor=SE, fill=None, expand=True)
 		self.button_frame.pack(side=TOP, anchor=N, fill=BOTH, expand=True)
