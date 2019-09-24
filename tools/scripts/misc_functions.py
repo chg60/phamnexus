@@ -4,7 +4,6 @@ import shlex
 from subprocess import Popen
 
 
-
 def get_database_names(handler):
 	"""
 	Connects to MySQL using verified username and password and queries
@@ -15,7 +14,7 @@ def get_database_names(handler):
 	# Initialize list to store results
 	databases = list()
 	# Query to give MySQLConnectionHandler
-	query = "SELECT DATABASES"
+	query = "SHOW DATABASES"
 
 	try:
 		handler.open_connection()
@@ -78,14 +77,12 @@ def update_mac_application(version):
 	:param version: The version string of the Mac App bundle to get
 	:return: 0 if success, 1 if any fail
 	"""
-	# Download will be put in user's Downloads folder
-	download_dir = os.path.expanduser("~") + "/Downloads/"
 	commands = [
 		"curl -L {} {}/MacOS-version{}.zip".format(GIT_APP.format(version),
-												   download_dir, version),
-		"unzip {}/MacOS-version{}.zip -d {}".format(download_dir, version,
-													download_dir),
-		"rm {}/MacOS-version{}.zip".format(download_dir, version)]
+												   DOWNLOAD_DIR, version),
+		"unzip {}/MacOS-version{}.zip -d {}".format(DOWNLOAD_DIR, version,
+													DOWNLOAD_DIR),
+		"rm {}/MacOS-version{}.zip".format(DOWNLOAD_DIR, version)]
 
 	# Iterate through, process, and run each command as a subprocess
 	try:
