@@ -5,11 +5,11 @@ from tkinter.messagebox import showinfo
 from tkinter.messagebox import askyesno
 
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
-from tools.scripts.misc_functions import validate_mysql_credentials
+from data.constants import ERROR_MESSAGES, DOWNLOAD_DIR
 
 
 class DatabaseUpdater:
-	def __init__(self, controller, database):
+	def __init__(self, controller, handler):
 		"""
 		Checks to see whether a local database name exists at the
 		webfactional server, and what that remote version number is.
@@ -19,41 +19,78 @@ class DatabaseUpdater:
 		the out of data version. If remote version <= local version,
 		showinfo local version is up to date.
 		:param controller: reference to the main window controller
-		:param database: MySQL database to be checked
 		"""
 		self.controller = controller
-
-		self.attempts_left = 3
-		self.username = None
-		self.password = None
-		self.credentials_valid = False
-
-		self.database = database
-
-		self.remote_address = \
-			"http://phamerator.webfactional.com/databases_Hatfull"
+		self.handler = handler
 
 		self.local_version = None
 		self.remote_version = None
 
-	def get_root_pw(self):
+		self.do_update = self.ask_do_update()
+
+	def ask_do_update(self):
 		"""
-		Checks that the username and password are valid - if they are
-		not, prompts the user it input admin username and password up to
-		self.attempts_left times (default 3).
+
+		:return:
 		"""
-		while not self.credentials_valid and self.attempts_left > 0:
-			self.username, self.password = validate_mysql_credentials(
-				self.username, self.password)
-			if self.username is not None and self.password is not None:
-				self.credentials_valid = True
-				return 0
-			else:
+		response = askyesno(title="Check for Database Updates?",
+							message=ERROR_MESSAGES["do_db_update"].format(
+								self.handler.db))
+		return response
+
+	def check_db_versions(self):
+		"""
+
+		:return: False by default, True if remote > local
+		"""
+		# If admin credentials are invalid
+		if not self.validate_admin_credentials():
+			# Try to get valid credentials
+			self.get_admin_credentials()
+		# If we're still good to update (i.e. didn't fail to get admin u/p)
+		if self.do_update:
+			# Get local database version
+			self.local_version = self.get_local_version()
+			# Get remote database version
+			self.remote_version = self.get_remote_version()
+			# If remote > local, return True
+			if self.remote_version > self.local_version:
+				return True
+		# Otherwise, return False by default
+		return False
+
+	def validate_admin_credentials(self):
+		"""
+        Uses the MySQLConnectionHandler's builtin method to check if
+        username@'localhost' identified by 'password' is valid on the
+        machine in question.
+        :return: True or False
+        """
+		self.handler.validate_credentials()
+		return self.handler.credential_status
+
+	def get_admin_credentials(self):
+		"""
+        Uses the GetMySQLUserPassDialog window to ask for user-input
+        username and password for MySQL.
+        :return:
+        """
+		attempts_remain = 3
+		while attempts_remain > 0:
+			attempts_remain -= 1
+			self.handler.username, self.handler.password = \
 				GetMySQLUserPassDialog(self).wait_window()
-				self.attempts_left -= 1
-		if self.attempts_left == 0 and not self.credentials_valid:
-			self.skip_update()
-		return 1
+			if self.validate_admin_credentials():
+				return
+			if attempts_remain != 0:
+				showinfo(title="MySQL Login Attempt Failed",
+						 message=ERROR_MESSAGES["failed_login"])
+			else:
+				showinfo(title="Login Attempt Maximum Reached",
+						 message=ERROR_MESSAGES["max_login"])
+				showinfo(title="Skipping Database Update",
+						 message=ERROR_MESSAGES["skip_db_upd"])
+				self.do_update = False
 
 	def get_local_version(self):
 		"""
@@ -61,17 +98,15 @@ class DatabaseUpdater:
 		selects Version from the version table.
 		:return: local_version
 		"""
+		query = "SELECT Version from version"
 		try:
-			con = pms.connect("localhost", self.username, self.password,
-							  self.database)
-			cur = con.cursor()
-			cur.execute("SELECT Version FROM version")
-			local_version = int(cur.fetchall()[0][0])
-			con.close()
-		except pms.err.DatabaseError:
+			self.handler.open_connection()
+			local_version = int(self.handler.execute_query(query)[0]["Version"])
+			self.handler.close_connection()
+		except:
 			local_version = 0
-		self.local_version = local_version
-		return
+
+		return local_version
 
 	def get_remote_version(self):
 		"""
@@ -80,36 +115,22 @@ class DatabaseUpdater:
 		"""
 		try:
 			response = requests.get("{}/{}.version".format(
-				self.remote_address, self.database))
+				self.controller.server, self.handler.database))
 			if response.status_code == 404:
 				showinfo(title="404 Error",
-						 message="The default server address doesn't appear "
-								 "to have a database called {}".format(
-							 self.database))
+						 message=ERROR_MESSAGES["404_db_update"].format(
+							 self.handler.database))
 				remote_version = 0
 			elif response.status_code == 200:
 				remote_version = int(response.text.rstrip("\n"))
 			else:
-				showinfo(title="Unknown Error",
-						 message="An unknown error has occurred while "
-								 "checking for database updates.")
+				showinfo(title="{} Error".format(response.status_code),
+						 message=ERROR_MESSAGES["unk_db_update"])
 				remote_version = 0
 		except requests.exceptions.ConnectionError:
 			remote_version = 0
-		self.remote_version = remote_version
-		return
 
-	def ask_update_db(self):
-		"""
-		Launches a tkinter.messagebox.askyesno window asking if user
-		wants to check for updates to the selected database.
-		:return: True, False
-		"""
-		check_updates = askyesno(title="Check for Updates?",
-								 message="Do you want to check the Hatfull "
-										 "server for the newest version of "
-										 "{}?".format(self.database))
-		return check_updates
+		return remote_version
 
 	def do_update_db(self):
 		"""
@@ -117,27 +138,29 @@ class DatabaseUpdater:
 		local version is lower than the remote version. Otherwise,
 		indicates that no updates are available.
 		"""
-		password_status = self.get_root_pw()
-		if password_status == 1:		# username/password verification failed
-			print("Bad username/password. Skipping database updates.")
-			return
-		
-		self.get_local_version()
-		self.get_remote_version()
+		if self.do_update:
+			updates_available = self.check_db_versions()
+			if updates_available:
+				get_updates = askyesno(title="Database Updates Available",
+									   message=ERROR_MESSAGES[
+										   "db_upd_avail"].format(
+										   self.handler.database))
+				if not get_updates:
+					self.do_update = False
+					showinfo(title="Skipping Database Updates",
+							 message=ERROR_MESSAGES["skip_db_upd"])
+			else:
+				self.do_update = False
+				showinfo(title="No Updates Available",
+						 message=ERROR_MESSAGES["no_upd_avail"])
 
-		if self.local_version < self.remote_version:
-			get_updates = askyesno(title="Updates Available",
-								   message="The Hatfull server version for "
-										   "{} is higher than your local "
-										   "version. Download "
-										   "updates?".format(self.database))
-			if get_updates is False:
-				return
+		if self.do_update:
 
 			try:
-				response = requests.get("{}/{}.sql".format(self.remote_address,
-														   self.database))
-				g = open("{}.sql".format(self.database), "w")
+				response = requests.get("{}/{}.sql".format(
+					self.controller.server, self.handler.database))
+				g = open("{}/{}.sql".format(DOWNLOAD_DIR,
+											self.handler.database), "w")
 				g.write(response.text)
 				g.close()
 			except requests.exceptions.ConnectionError:
@@ -145,28 +168,21 @@ class DatabaseUpdater:
 						 message="Failed to download updates.")
 				return
 			try:
-				os.system("mysql -u {} --password={} {} < {}.sql".format(
-					self.username, self.password, self.database,
-					self.database))
-				os.system("rm {}.sql".format(self.database))
+				transaction = ["SOURCE {}/{}.sql".format(DOWNLOAD_DIR,
+														 self.handler.database)]
+				self.handler.execute_transaction(transaction)
 			except pms.err.OperationalError:
 				showinfo(title="MySQL Error",
 						 message="Failed to import new database version.")
 				return
-			showinfo(title="Done Importing Updates",
-					 message="{} is now up to date!".format(self.database))
-			return
-		else:
-			showinfo(title="No Updates Available",
-					 message="There are no updates available for {} right "
-							 "now.".format(self.database))
-			return
+			try:
+				os.system("rm {}/{}.sql".format(DOWNLOAD_DIR,
+												self.handler.database))
+			except OSError:
+				print("Failed to delete {}/{}.sql".format(DOWNLOAD_DIR,
+					self.handler.database))
 
-	def skip_update(self):
-		showinfo(title="Too Many Login Attempts",
-				 message="To discourage malicious actors from attempting "
-						 "to learn your MySQL login info, database "
-						 "updates will be skipped for now. Please verify "
-						 "your MySQL login information and try again "
-						 "later.")
-		return
+			showinfo(title="Done Importing Updates",
+					 message=ERROR_MESSAGES["db_upd_done"].format(
+						 self.handler.database))
+			return
