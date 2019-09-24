@@ -58,7 +58,7 @@ def get_metadata(handler):
 				metadata["Subcluster"].append("Un-clustered")
 			elif result["Subcluster2"] is None:
 				metadata["Cluster"].append(result["Cluster2"])
-				metadata["Subcluster"].append("Un-subclustered")
+				metadata["Subcluster"].append(result["Cluster2"])
 			else:
 				metadata["Cluster"].append(result["Cluster2"])
 				metadata["Subcluster"].append(result["Subcluster2"])
