@@ -1,5 +1,4 @@
 from tkinter import *
-from tools.scripts.misc_functions import *
 
 
 class ChooseHost(Frame):
