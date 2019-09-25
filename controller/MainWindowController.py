@@ -5,11 +5,13 @@ import sys
 import webbrowser
 import requests
 import tkinter as tk
+import numpy as np
 
 from tkinter.messagebox import showinfo, askyesnocancel
 
 from tools.objects.MySQLConnectionHandler import MySQLConnectionHandler
 from tools.objects.NexusHandler import NexusHandler
+from tools.objects.DatabaseUpdater import DatabaseUpdater
 from tools.scripts.misc_functions import *
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
 from ui.windows.MainWindow import MainWindow
@@ -22,35 +24,33 @@ if platform.system().lower() == "darwin":
 class MainWindowController:
     def __init__(self):
         # Load application preferences
-        self._server = "http://phamerator.webfactional.com/databases_Hatfull/"
-        self._font_family = "Helvetica"
-        self._font_size = 14
+        self.server = "http://phamerator.webfactional.com/databases_Hatfull/"
+        self.font = ("Monaco", 12)
 
         # MySQL connection with select-only privileges
-        self._anon_mysql = MySQLConnectionHandler()
-        self._anon_mysql.username = "anonymous"
-        self._anon_mysql.password = "anonymous"
-        self._anon_usable = self.validate_anon_credentials()
+        self.anon_mysql = MySQLConnectionHandler()
+        self.anon_mysql.username = DEFAULT_USER
+        self.anon_mysql.password = DEFAULT_PASS
+        self.anon_usable = self.validate_anon_credentials()
 
         # MySQL connection with all privileges
-        self._admin_mysql = MySQLConnectionHandler()
+        self.admin_mysql = MySQLConnectionHandler()
 
         # Available to user in MySQL
-        self._available_databases = list()
-        self._available_hosts = list()
-        self._available_clusters = list()
-        self._available_subclusters = list()
-        self._available_phages = list()
+        self.available_databases = list()
+        self.available_hosts = list()
+        self.available_clusters = list()
+        self.available_phages = list()
 
-        self._metadata = None
+        self.metadata = None
 
         # User selections
         self.runmode = None
         self.exclude_draft = False
+
         self.selected_database = None
         self.selected_hosts = list()
         self.selected_clusters = list()
-        self.selected_subclusters = list()
         self.selected_phages = list()
 
         # Output file
@@ -67,8 +67,8 @@ class MainWindowController:
         the machine in question.
         :return: True or False
         """
-        self._anon_mysql.validate_credentials()
-        return self._anon_mysql.credential_status
+        self.anon_mysql.validate_credentials()
+        return self.anon_mysql.credential_status
 
     def validate_admin_credentials(self):
         """
@@ -77,8 +77,8 @@ class MainWindowController:
         machine in question.
         :return: True or False
         """
-        self._admin_mysql.validate_credentials()
-        return self._admin_mysql.credential_status
+        self.admin_mysql.validate_credentials()
+        return self.admin_mysql.credential_status
 
     def get_admin_credentials(self):
         """
@@ -89,8 +89,9 @@ class MainWindowController:
         attempts_remain = 3
         while attempts_remain > 0:
             attempts_remain -= 1
-            self._admin_mysql.username, self._admin_mysql.password = \
-                GetMySQLUserPassDialog(self).wait_window()
+            GetMySQLUserPassDialog(controller=self,
+                                   parent=self.window.root,
+                                   title="MySQL Login")
             if self.validate_admin_credentials():
                 return
             if attempts_remain != 0:
@@ -101,18 +102,6 @@ class MainWindowController:
                          message=ERROR_MESSAGES["max_login"])
                 sys.exit(1)
 
-    # TODO: is this necessary?
-    def refresh_available_hosts(self):
-        self._available_hosts = sorted(list(set(self._metadata["HostStrain"])))
-
-    # TODO: is this necessary?
-    def refresh_available_clusters(self):
-        self._available_clusters = sorted(list(set(self._metadata["Cluster"])))
-
-    # TODO: is this necessary?
-    def refresh_available_phages(self):
-        self._available_phages = sorted(list(set(self._metadata["PhageID"])))
-
     def get_mysql_dbs(self):
         """
         Uses MySQLConnectionHandler builtin method to query for the
@@ -120,21 +109,61 @@ class MainWindowController:
         :return:
         """
         # If the anonymous account is usable, use it
-        if self._anon_usable:
-            self._available_databases = get_database_names(
-                self._anon_mysql, IGNORE_DBS)
+        if self.anon_usable:
+            self.available_databases = get_database_names(self.anon_mysql)
         else:
             # Otherwise if the admin account is usable, use it
-            if self._admin_mysql.credential_status:
-                self._available_databases = get_database_names(
-                    self._admin_mysql, IGNORE_DBS)
+            if self.admin_mysql.credential_status:
+                self.available_databases = get_database_names(
+                    self.admin_mysql)
             # Otherwise if the admin account is unusable, get credentials
             else:
                 self.get_admin_credentials()
-                self._available_databases = get_database_names(
-                    self._admin_mysql, IGNORE_DBS)
+                self.available_databases = get_database_names(
+                    self.admin_mysql)
 
-    def get_metadata(self):
+    def update_database(self):
+        """
+        Uses DatabaseUpdater methods to check whether updates are
+        available for the selected database, and optionally download
+        and apply those updates if they are available.
+        :return:
+        """
+        self.anon_mysql.database = self.selected_database
+        self.admin_mysql.database = self.selected_database
+        updater = DatabaseUpdater(controller=self, handler=self.admin_mysql)
+        updater.do_update_db()
+
+    def update_available_hosts(self):
+        """
+        Finds all the unique hosts available in self.metadata, converts
+        them to utf-8 strings, and adds them to self.available_hosts.
+        :return:
+        """
+        for host in np.unique(self.metadata["HostStrain"]):
+            self.available_hosts.append(host.decode("utf-8"))
+
+    def update_available_clusters(self):
+        """
+        Finds all the unique clusters available in self.metadata,
+        converts them to utf-8 strings, and adds them to
+        self.available_clusters.
+        :return:
+        """
+        for cluster in np.unique(self.metadata["Cluster"]):
+            self.available_clusters.append(cluster.decode("utf-8"))
+
+    def update_available_phages(self):
+        """
+        Finds all the unique phages available in self.metadata,
+        converts them to utf-8 strings, and adds them to
+        self.available_phages.
+        :return:
+        """
+        for phage in np.unique(self.metadata["PhageID"]):
+            self.available_phages.append(phage.decode("utf-8"))
+
+    def get_phages(self):
         """
         Sends a valid mysql connection handler out to `get_metadata`
         function from `misc_functions`. `get_metadata` returns
@@ -142,17 +171,21 @@ class MainWindowController:
         :return:
         """
         # Use anonymous account if possible, otherwise use admin
-        if self._anon_usable:
-            self._anon_mysql.database = self.selected_database
-            self._metadata = get_metadata(self._anon_mysql)
+        if self.anon_usable:
+            self.anon_mysql.database = self.selected_database
+            self.metadata = get_phages(self.anon_mysql)
         else:
-            self._admin_mysql.database = self.selected_database
-            self._metadata = get_metadata(self._admin_mysql)
+            self.admin_mysql.database = self.selected_database
+            self.metadata = get_phages(self.admin_mysql)
+
+        self.update_available_hosts()
+        self.update_available_clusters()
+        self.update_available_phages()
 
     def redraw_window(self, frame):
         self.window.redraw(frame=frame)
 
-    def make_nexus(self, filename):
+    def make_nexus(self, filename="output.nex"):
         """
         Takes user selection and queries the database for phage and
         pham data specific to that selection. Sifts through phage and
@@ -163,6 +196,11 @@ class MainWindowController:
         all_phams = list()
         phages_and_phams = dict()
 
+        if self.anon_usable:
+            handler = self.anon_mysql
+        else:
+            handler = self.admin_mysql
+
         # Populate the queue with selected phages.
         query_queue = self.selected_phages
         # While there's still something in the queue
@@ -172,15 +210,11 @@ class MainWindowController:
             phage = query_queue.pop(0)
             # Results dictionary will only have 1 key at a time, but for
             # simplicity, processing is done the same as other runmodes.
-            results = get_phams_by_phage(username=self.username,
-                                         password=self.password,
-                                         database=self.selected_database,
+            results = get_phams_by_phage(handler=handler,
                                          phage=phage)
-            for phageid in results.keys():
-                phams = results[phageid]
-                phages_and_phams[phageid] = phams
-                for pham in phams:
-                    all_phams.append(pham)
+            phages_and_phams[phage] = results
+            for pham in results:
+                all_phams.append(pham)
 
         # List of all_phams is non-unique; fix that, and sort the list.
         all_phams = sorted(list(set(all_phams)))
@@ -214,7 +248,7 @@ class MainWindowController:
         remote_version = response.text.rstrip("\n")
         if remote_version > local_version:
             update = askyesnocancel(title="Updates Available",
-                                    message=ERROR_MESSAGES["updates_avail"])
+                                    message=ERROR_MESSAGES["app_upd_avail"])
         else:
             showinfo(title="No Updates Available",
                      message=ERROR_MESSAGES["no_upd_avail"])
@@ -286,7 +320,7 @@ class MainWindowController:
                                   message="Do you want to launch this "
                                           "program's documentation in a "
                                           "web browser window?",
-                                  default=tkinter.messagebox.CANCEL)
+                                  default=tk.messagebox.CANCEL)
         if response is None or response is False:
             return
 
