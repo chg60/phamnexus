@@ -7,6 +7,17 @@ GIT_MASTER = "https://gihub.com/chg60/phamnexus"
 GIT_VERSION = "https://raw.github.com/chg60/phamnexus/master/data/version.txt"
 GIT_APP = "https://raw.github.com/chg60/phamnexus/master/MacOS-version{}.zip"
 
+# Possible runmodes
+RUNMODES = ["Compare phages from selected hosts",
+            "Compare phages from selected clusters",
+            "Choose my own phages",
+            "Compare random phages",
+            "Compare all phages"]
+
+# Default credentials
+DEFAULT_USER = "anonymous"
+DEFAULT_PASS = "anonymous"
+
 # Downloads will be put in user's Downloads folder
 DOWNLOAD_DIR = os.path.expanduser("~") + "/Downloads/"
 
