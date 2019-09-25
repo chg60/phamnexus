@@ -31,21 +31,29 @@ class MainWindow:
 		# Create file menu
 		self.file = Menu(self.menu_bar, tearoff=0)
 		self.file.add_command(label="Preferences",
+							  font=controller.font,
 							  command=None)
 		# self.controller.edit_preferences)
 		self.file.add_separator()
-		self.file.add_command(label="Quit", command=self.controller.quit)
-		self.menu_bar.add_cascade(menu=self.file, label="File")
+		self.file.add_command(label="Quit",
+							  font=controller.font,
+							  command=self.controller.quit)
+		self.menu_bar.add_cascade(menu=self.file, label="File",
+								  font=controller.font)
 
 		# Create help menu
 		self.help = Menu(self.menu_bar, tearoff=0)
 		self.help.add_command(label="Documentation",
+							  font=controller.font,
 							  command=self.controller.documentation)
 		self.help.add_command(label="Report a Bug",
+							  font=controller.font,
 							  command=self.controller.report_bug)
 		self.help.add_command(label="Check for Updates",
+							  font=controller.font,
 							  command=self.controller.check_updates)
-		self.menu_bar.add_cascade(menu=self.help, label="Help")
+		self.menu_bar.add_cascade(menu=self.help, label="Help",
+								  font=controller.font)
 
 		self.layout = ChooseRunmode(root=self.root, controller=self.controller)
 
