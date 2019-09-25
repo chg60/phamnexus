@@ -1,5 +1,7 @@
 from tkinter import *
 
+from data.constants import RUNMODES
+
 
 class ChooseRunmode(Frame):
 	def __init__(self, root, controller):
@@ -15,25 +17,18 @@ class ChooseRunmode(Frame):
 		self.final_only = IntVar()
 		self.final_only.set(value=0)
 
-		runmodes = ["Retrieve phams from selected Hosts",
-					"Retrieve phams from selected Clusters",
-					"Retrieve phams from selected Phages",
-					"Retrieve phams from all phages",
-					"Retrieve phams from random phages"]
-
 		self.viewer = Frame(self)
 
 		self.prompt_frame = Frame(self.viewer)
 		self.prompt_label = Label(self.prompt_frame,
-								  text="1. Which type of pham data do you "
-									   "want to retrieve?",
+								  text="1. Choose your desired runmode:",
 								  font=self.controller.font)
 		self.prompt_label.pack(side=TOP, anchor=W, fill=None, expand=True)
 
-		for i in range(len(runmodes)):
+		for i in range(len(RUNMODES)):
 			temp_radio = Radiobutton(master=self.prompt_frame,
 									 variable=self.runmode_selection,
-									 value=i, text=runmodes[i],
+									 value=i, text=RUNMODES[i],
 									 font=self.controller.font)
 			temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
