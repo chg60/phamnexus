@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.filedialog import asksaveasfilename
 from tkinter.messagebox import showinfo
 import random
+import numpy as np
 
 
 class FinalizePhage(Frame):
@@ -14,42 +15,17 @@ class FinalizePhage(Frame):
 
 		# Get selection data from
 		self.runmode = self.controller.runmode
-		self.metadata = self.controller.metadata
-		self.username = self.controller.username
-		self.password = self.controller.password
-		self.database = self.controller.selected_database
 		self.status = self.controller.final_status
 
-		self.available_phages = self.controller.available_phages
-		self.available_hosts = self.controller.available_hosts
-		self.available_clusters = self.controller.available_clusters
-
-		self.phage_index = dict()
-		self.host_to_phage = dict()
-		self.cluster_to_phage = dict()
-
-		for phage in self.available_phages:
-			# phages are unique, so only one index can be returned
-			self.phage_index[phage] = self.metadata["PhageID"].index(phage)
-
-			# Get host data and add this phage to that host's list of phages
-			# for easier list sorting
-			host = self.metadata["HostStrain"][self.phage_index[phage]]
-			host_phages = self.host_to_phage.get(host, [])
-			host_phages.append(phage)
-			self.host_to_phage[host] = host_phages
-
-			# Get cluster data and add this phage to that cluster's list of
-			# phages for easier list sorting
-			cluster = self.metadata["Cluster"][self.phage_index[phage]]
-			cluster_phages = self.cluster_to_phage.get(cluster, [])
-			cluster_phages.append(phage)
-			self.cluster_to_phage[cluster] = cluster_phages
+		self.metadata = controller.metadata
+		self.phages = sorted(controller.available_phages)
+		self.hosts = sorted(controller.available_hosts)
+		self.clusters = sorted(controller.available_clusters)
 
 		# List of ways that the PhageIDs can be sorted
 		self.sort_mode = IntVar()
 		self.sort_mode.set(value=0)
-		sort_modes = ["Sort by PhageID",
+		sort_modes = ["Sort by PhageID (default)",
 					  "Sort by Host, PhageID",
 					  "Sort by Cluster, PhageID"]
 
@@ -65,7 +41,8 @@ class FinalizePhage(Frame):
 												"auto-filled based on your "
 												"Host and status selections. "
 												"You may add or remove "
-												"additional phages.")
+												"additional phages.",
+										   font=controller.font)
 
 			self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
 										expand=True)
@@ -77,11 +54,13 @@ class FinalizePhage(Frame):
 				temp_radio = Radiobutton(master=self.sort_frame,
 										 variable=self.sort_mode,
 										 value=i,
+										 font=controller.font,
 										 text=sort_modes[i])
 				temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 			sort_button = Button(master=self.sort_frame,
 								 text="Sort",
+								 font=controller.font,
 								 command=lambda: self.sort(
 									 mode=self.sort_mode.get()))
 			sort_button.pack(side=TOP, anchor=W, fill=None, expand=True)
@@ -93,18 +72,21 @@ class FinalizePhage(Frame):
 			# Build a left Listbox frame that will display the available phages
 			self.available_frame = Frame(self.selection_frame)
 			self.available_label = Label(self.available_frame,
-										 text="Available Phages")
+										 text="Available Phages",
+										 font=controller.font)
 			self.available_label.pack(side=TOP, anchor=N, fill=None,
 									  expand=True)
 			self.available_list = Listbox(self.available_frame, width=40,
-										  height=30,
+										  height=30, font=controller.font,
 										  selectmode=EXTENDED)
-			for phage in self.available_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+
+			for phage in self.metadata:
+				phageid = phage["PhageID"].decode("utf-8")
+				host = phage["HostStrain"].decode("utf-8")
+				cluster = phage["Cluster"].decode("utf-8")
+				status = phage["Status"].decode("utf-8")
 				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), add])
+				display = "".join(["{:<20}".format(phageid), add])
 				self.available_list.insert(END, display)
 
 			self.available_list.pack(side=LEFT, anchor=N, fill=None,
@@ -118,11 +100,13 @@ class FinalizePhage(Frame):
 
 			self.add_button = Button(self.middle_button_frame,
 									 text="Add to Selection >>",
+									 font=controller.font,
 									 command=self.add)
 			self.add_button.pack(side=TOP, anchor=CENTER, fill=None,
 								 expand=True)
 			self.remove_button = Button(self.middle_button_frame,
 										text="<< Remove from Selection",
+										font=controller.font,
 										command=self.remove)
 			self.remove_button.pack(side=TOP, anchor=CENTER, fill=None,
 									expand=True)
@@ -134,32 +118,39 @@ class FinalizePhage(Frame):
 			# listbox
 			self.selected_frame = Frame(self.selection_frame)
 			self.selected_label = Label(self.selected_frame,
-										text="Selected Phages")
+										text="Selected Phages",
+										font=controller.font)
 			self.selected_label.pack(side=TOP, anchor=N, fill=None,
 									 expand=True)
 			self.selected_list = Listbox(self.selected_frame, width=40,
-										 height=30, selectmode=EXTENDED)
+										 height=30, selectmode=EXTENDED,
+										 font=controller.font)
 
 			# Auto-select phages based on chosen host(s) and status
 			auto_chosen_phages = list()
 			chosen_hosts = self.controller.selected_hosts
-			if self.status == 1:
-				for phage in self.available_phages:
-					host = self.metadata["HostStrain"][self.phage_index[phage]]
-					status = self.metadata["Status"][self.phage_index[phage]]
-					if host in chosen_hosts and status != "draft":
-						auto_chosen_phages.append(phage)
-			else:
-				for phage in self.available_phages:
-					host = self.metadata["HostStrain"][self.phage_index[phage]]
-					if host in chosen_hosts:
-						auto_chosen_phages.append(phage)
+			# Convert chosen_hosts to bytes strings
+			chosen_hosts = [host.encode('utf-8') for host in chosen_hosts]
+
+			for host in chosen_hosts:
+				phages = self.metadata[self.metadata["HostStrain"] == host]
+				if self.status == 1:
+					for phage in phages:
+						if phage["Status"] != 'draft'.encode('utf-8'):
+							phageid = phage["PhageID"].decode('utf-8')
+							auto_chosen_phages.append(phageid)
+				else:
+					for phage in phages:
+						phageid = phage["PhageID"].decode('utf-8')
+						auto_chosen_phages.append(phageid)
 
 			# Populate auto_chosen_phages into selected list
-			for phage in auto_chosen_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+			for phage in sorted(auto_chosen_phages):
+				data = self.metadata[self.metadata["PhageID"] ==
+									 phage.encode('utf-8')]
+				host = data['HostStrain'][0].decode('utf-8')
+				cluster = data['Cluster'][0].decode('utf-8')
+				status = data['Status'][0].decode('utf-8')
 				add = "\t({}, {}, {})".format(host, cluster, status)
 				display = "".join(["{:<20}".format(phage), "{:<40}".format(
 					add)])
@@ -184,7 +175,8 @@ class FinalizePhage(Frame):
 												"selections. You may add or "
 												"remove additional phages "
 												"(matching your status "
-												"selection).")
+												"selection).",
+										   font=controller.font)
 			self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
 										expand=True)
 			self.instruction_frame.pack(side=TOP, anchor=NW, fill=X,
@@ -195,11 +187,13 @@ class FinalizePhage(Frame):
 				temp_radio = Radiobutton(master=self.sort_frame,
 										 variable=self.sort_mode,
 										 value=i,
+										 font=controller.font,
 										 text=sort_modes[i])
 				temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 			sort_button = Button(master=self.sort_frame,
 								 text="Sort",
+								 font=controller.font,
 								 command=lambda: self.sort(
 									 mode=self.sort_mode.get()))
 			sort_button.pack(side=TOP, anchor=W, fill=None, expand=True)
@@ -211,18 +205,21 @@ class FinalizePhage(Frame):
 			# Build a left Listbox frame that will display the available phages
 			self.available_frame = Frame(self.selection_frame)
 			self.available_label = Label(self.available_frame,
-										 text="Available Clusters")
+										 text="Available Clusters",
+										 font=controller.font)
 			self.available_label.pack(side=TOP, anchor=N, fill=None,
 									  expand=True)
 			self.available_list = Listbox(self.available_frame, width=40,
-										  height=30,
+										  height=30, font=controller.font,
 										  selectmode=EXTENDED)
-			for phage in self.available_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+
+			for phage in self.metadata:
+				phageid = phage["PhageID"].decode("utf-8")
+				host = phage["HostStrain"].decode("utf-8")
+				cluster = phage["Cluster"].decode("utf-8")
+				status = phage["Status"].decode("utf-8")
 				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), add])
+				display = "".join(["{:<20}".format(phageid), add])
 				self.available_list.insert(END, display)
 
 			self.available_list.pack(side=LEFT, anchor=N, fill=None,
@@ -236,11 +233,13 @@ class FinalizePhage(Frame):
 
 			self.add_button = Button(self.middle_button_frame,
 									 text="Add to Selection >>",
+									 font=controller.font,
 									 command=self.add)
 			self.add_button.pack(side=TOP, anchor=CENTER, fill=None,
 								 expand=True)
 			self.remove_button = Button(self.middle_button_frame,
 										text="<< Remove from Selection",
+										font=controller.font,
 										command=self.remove)
 			self.remove_button.pack(side=TOP, anchor=CENTER, fill=None,
 									expand=True)
@@ -252,32 +251,40 @@ class FinalizePhage(Frame):
 			# listbox
 			self.selected_frame = Frame(self.selection_frame)
 			self.selected_label = Label(self.selected_frame,
-										text="Selected Phages")
+										text="Selected Phages",
+										font=controller.font)
 			self.selected_label.pack(side=TOP, anchor=N, fill=None,
 									 expand=True)
 			self.selected_list = Listbox(self.selected_frame, width=40,
+										 font=controller.font,
 										 height=30, selectmode=EXTENDED)
 
-			# Auto-select phages based on chosen host(s) and status
+			# Auto-select phages based on chosen cluster(s) and status
 			auto_chosen_phages = list()
 			chosen_clusters = self.controller.selected_clusters
-			if self.status == 1:
-				for phage in self.available_phages:
-					cluster = self.metadata["Cluster"][self.phage_index[phage]]
-					status = self.metadata["Status"][self.phage_index[phage]]
-					if cluster in chosen_clusters and status != "draft":
-						auto_chosen_phages.append(phage)
-			else:
-				for phage in self.available_phages:
-					cluster = self.metadata["Cluster"][self.phage_index[phage]]
-					if cluster in chosen_clusters:
-						auto_chosen_phages.append(phage)
+			# Convert to utf-8 bytes strings
+			chosen_clusters = [cluster.encode('utf-8') for cluster in
+							   chosen_clusters]
+
+			for cluster in chosen_clusters:
+				phages = self.metadata[self.metadata["Cluster"] == cluster]
+				if self.status == 1:
+					for phage in phages:
+						if phage["Status"] != 'draft'.encode('utf-8'):
+							phageid = phage["PhageID"].decode('utf-8')
+							auto_chosen_phages.append(phageid)
+				else:
+					for phage in phages:
+						phageid = phage["PhageID"].decode('utf-8')
+						auto_chosen_phages.append(phageid)
 
 			# Populate auto_chosen_phages into selected list
-			for phage in auto_chosen_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+			for phage in sorted(auto_chosen_phages):
+				data = self.metadata[self.metadata["PhageID"] ==
+									 phage.encode('utf-8')]
+				host = data['HostStrain'][0].decode('utf-8')
+				cluster = data['Cluster'][0].decode('utf-8')
+				status = data['Status'][0].decode('utf-8')
 				add = "\t({}, {}, {})".format(host, cluster, status)
 				display = "".join(["{:<20}".format(phage), "{:<40}".format(
 					add)])
@@ -297,7 +304,8 @@ class FinalizePhage(Frame):
 										   text="4. Choose the phages to be "
 												"included in the splistree "
 												"diagram, then click 'Make "
-												"Nexus File'.")
+												"Nexus File'.",
+										   font=controller.font)
 			self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
 										expand=True)
 			self.instruction_frame.pack(side=TOP, anchor=NW, fill=X,
@@ -308,11 +316,13 @@ class FinalizePhage(Frame):
 				temp_radio = Radiobutton(master=self.sort_frame,
 										 variable=self.sort_mode,
 										 value=i,
+										 font=controller.font,
 										 text=sort_modes[i])
 				temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 			sort_button = Button(master=self.sort_frame,
 								 text="Sort",
+								 font=controller.font,
 								 command=lambda: self.sort(
 									 mode=self.sort_mode.get()))
 			sort_button.pack(side=TOP, anchor=W, fill=None, expand=True)
@@ -324,18 +334,21 @@ class FinalizePhage(Frame):
 			# Build a left Listbox frame that will display the available phages
 			self.available_frame = Frame(self.selection_frame)
 			self.available_label = Label(self.available_frame,
-										 text="Available Phages")
+										 text="Available Phages",
+										 font=controller.font)
 			self.available_label.pack(side=TOP, anchor=N, fill=None,
 									  expand=True)
 			self.available_list = Listbox(self.available_frame, width=40,
-										  height=30,
+										  height=30, font=controller.font,
 										  selectmode=EXTENDED)
-			for phage in self.available_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+
+			for phage in self.metadata:
+				phageid = phage["PhageID"].decode("utf-8")
+				host = phage["HostStrain"].decode("utf-8")
+				cluster = phage["Cluster"].decode("utf-8")
+				status = phage["Status"].decode("utf-8")
 				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), add])
+				display = "".join(["{:<20}".format(phageid), add])
 				self.available_list.insert(END, display)
 
 			self.available_list.pack(side=LEFT, anchor=N, fill=None,
@@ -349,11 +362,13 @@ class FinalizePhage(Frame):
 
 			self.add_button = Button(self.middle_button_frame,
 									 text="Add to Selection >>",
+									 font=controller.font,
 									 command=self.add)
 			self.add_button.pack(side=TOP, anchor=CENTER, fill=None,
 								 expand=True)
 			self.remove_button = Button(self.middle_button_frame,
 										text="<< Remove from Selection",
+										font=controller.font,
 										command=self.remove)
 			self.remove_button.pack(side=TOP, anchor=CENTER, fill=None,
 									expand=True)
@@ -365,24 +380,13 @@ class FinalizePhage(Frame):
 			# listbox
 			self.selected_frame = Frame(self.selection_frame)
 			self.selected_label = Label(self.selected_frame,
-										text="Selected Phages")
+										text="Selected Phages",
+										font=controller.font)
 			self.selected_label.pack(side=TOP, anchor=N, fill=None,
 									 expand=True)
 			self.selected_list = Listbox(self.selected_frame, width=40,
+										 font=controller.font,
 										 height=30, selectmode=EXTENDED)
-
-			# Don't auto-select phages
-			auto_chosen_phages = list()
-
-			# Populate auto_chosen_phages into selected list
-			for phage in auto_chosen_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
-				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), "{:<40}".format(
-					add)])
-				self.selected_list.insert(END, display)
 
 			self.selected_list.pack(side=LEFT, anchor=N, fill=None,
 									expand=True)
@@ -401,7 +405,8 @@ class FinalizePhage(Frame):
 												"phages, or select phages "
 												"you wish to exclude, and "
 												"remove them from the "
-												"selection first.")
+												"selection first.",
+										   font=controller.font)
 			self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
 										expand=True)
 			self.instruction_frame.pack(side=TOP, anchor=NW, fill=X,
@@ -412,11 +417,13 @@ class FinalizePhage(Frame):
 				temp_radio = Radiobutton(master=self.sort_frame,
 										 variable=self.sort_mode,
 										 value=i,
+										 font=controller.font,
 										 text=sort_modes[i])
 				temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 			sort_button = Button(master=self.sort_frame,
 								 text="Sort",
+								 font=controller.font,
 								 command=lambda: self.sort(
 									 mode=self.sort_mode.get()))
 			sort_button.pack(side=TOP, anchor=W, fill=None, expand=True)
@@ -428,20 +435,21 @@ class FinalizePhage(Frame):
 			# Build a left Listbox frame that will display the available phages
 			self.available_frame = Frame(self.selection_frame)
 			self.available_label = Label(self.available_frame,
-										 text="Available Phages")
+										 text="Available Phages",
+										 font=controller.font)
 			self.available_label.pack(side=TOP, anchor=N, fill=None,
 									  expand=True)
 			self.available_list = Listbox(self.available_frame, width=40,
-										  height=30,
+										  height=30, font=controller.font,
 										  selectmode=EXTENDED)
 
-			# Auto-select phages based on status
-			for phage in self.available_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+			for phage in self.metadata:
+				phageid = phage["PhageID"].decode("utf-8")
+				host = phage["HostStrain"].decode("utf-8")
+				cluster = phage["Cluster"].decode("utf-8")
+				status = phage["Status"].decode("utf-8")
 				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), add])
+				display = "".join(["{:<20}".format(phageid), add])
 				self.available_list.insert(END, display)
 
 			self.available_list.pack(side=LEFT, anchor=N, fill=None,
@@ -455,11 +463,13 @@ class FinalizePhage(Frame):
 
 			self.add_button = Button(self.middle_button_frame,
 									 text="Add to Selection >>",
+									 font=controller.font,
 									 command=self.add)
 			self.add_button.pack(side=TOP, anchor=CENTER, fill=None,
 								 expand=True)
 			self.remove_button = Button(self.middle_button_frame,
 										text="<< Remove from Selection",
+										font=controller.font,
 										command=self.remove)
 			self.remove_button.pack(side=TOP, anchor=CENTER, fill=None,
 									expand=True)
@@ -471,28 +481,36 @@ class FinalizePhage(Frame):
 			# listbox
 			self.selected_frame = Frame(self.selection_frame)
 			self.selected_label = Label(self.selected_frame,
-										text="Selected Phages")
+										text="Selected Phages",
+										font=controller.font)
 			self.selected_label.pack(side=TOP, anchor=N, fill=None,
 									 expand=True)
 			self.selected_list = Listbox(self.selected_frame, width=40,
+										 font=controller.font,
 										 height=30, selectmode=EXTENDED)
 
 			# Auto-select phages based on chosen status
 			auto_chosen_phages = list()
+
 			if self.status == 1:
-				for phage in self.available_phages:
-					status = self.metadata["Status"][self.phage_index[phage]]
-					if status != "draft":
-						auto_chosen_phages.append(phage)
+				phages = self.metadata[self.metadata["Status"] != b'draft']
+				for phage in phages:
+					if phage["Status"] != 'draft'.encode('utf-8'):
+						phageid = phage["PhageID"].decode('utf-8')
+						auto_chosen_phages.append(phageid)
 			else:
-				for phage in self.available_phages:
-						auto_chosen_phages.append(phage)
+				phages = self.metadata
+				for phage in phages:
+					phageid = phage["PhageID"].decode('utf-8')
+					auto_chosen_phages.append(phageid)
 
 			# Populate auto_chosen_phages into selected list
-			for phage in auto_chosen_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+			for phage in sorted(auto_chosen_phages):
+				data = self.metadata[self.metadata["PhageID"] ==
+									 phage.encode('utf-8')]
+				host = data['HostStrain'][0].decode('utf-8')
+				cluster = data['Cluster'][0].decode('utf-8')
+				status = data['Status'][0].decode('utf-8')
 				add = "\t({}, {}, {})".format(host, cluster, status)
 				display = "".join(["{:<20}".format(phage), "{:<40}".format(
 					add)])
@@ -513,7 +531,8 @@ class FinalizePhage(Frame):
 												"selected.  Just click 'Make "
 												"Nexus File' to use these "
 												"phages, or you can modify "
-												"the selected list first.")
+												"the selected list first.",
+										   font=controller.font)
 			self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
 										expand=True)
 			self.instruction_frame.pack(side=TOP, anchor=NW, fill=X,
@@ -524,11 +543,13 @@ class FinalizePhage(Frame):
 				temp_radio = Radiobutton(master=self.sort_frame,
 										 variable=self.sort_mode,
 										 value=i,
+										 font=controller.font,
 										 text=sort_modes[i])
 				temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 			sort_button = Button(master=self.sort_frame,
 								 text="Sort",
+								 font=controller.font,
 								 command=lambda: self.sort(
 									 mode=self.sort_mode.get()))
 			sort_button.pack(side=TOP, anchor=W, fill=None, expand=True)
@@ -540,18 +561,21 @@ class FinalizePhage(Frame):
 			# Build a left Listbox frame that will display the available phages
 			self.available_frame = Frame(self.selection_frame)
 			self.available_label = Label(self.available_frame,
-										 text="Available Phages")
+										 text="Available Phages",
+										 font=controller.font)
 			self.available_label.pack(side=TOP, anchor=N, fill=None,
 									  expand=True)
 			self.available_list = Listbox(self.available_frame, width=40,
-										  height=30,
+										  height=30, font=controller.font,
 										  selectmode=EXTENDED)
-			for phage in self.available_phages:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+
+			for phage in self.metadata:
+				phageid = phage["PhageID"].decode("utf-8")
+				host = phage["HostStrain"].decode("utf-8")
+				cluster = phage["Cluster"].decode("utf-8")
+				status = phage["Status"].decode("utf-8")
 				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), add])
+				display = "".join(["{:<20}".format(phageid), add])
 				self.available_list.insert(END, display)
 
 			self.available_list.pack(side=LEFT, anchor=N, fill=None,
@@ -565,11 +589,13 @@ class FinalizePhage(Frame):
 
 			self.add_button = Button(self.middle_button_frame,
 									 text="Add to Selection >>",
+									 font=controller.font,
 									 command=self.add)
 			self.add_button.pack(side=TOP, anchor=CENTER, fill=None,
 								 expand=True)
 			self.remove_button = Button(self.middle_button_frame,
 										text="<< Remove from Selection",
+										font=controller.font,
 										command=self.remove)
 			self.remove_button.pack(side=TOP, anchor=CENTER, fill=None,
 									expand=True)
@@ -581,22 +607,28 @@ class FinalizePhage(Frame):
 			# listbox
 			self.selected_frame = Frame(self.selection_frame)
 			self.selected_label = Label(self.selected_frame,
-										text="Selected Phages")
+										text="Selected Phages",
+										font=controller.font)
 			self.selected_label.pack(side=TOP, anchor=N, fill=None,
 									 expand=True)
 			self.selected_list = Listbox(self.selected_frame, width=40,
+										 font=controller.font,
 										 height=30, selectmode=EXTENDED)
 
 			# Auto-select phages based on random and chosen status
 			auto_chosen_phages = list()
+
 			if self.status == 1:
-				for phage in self.available_phages:
-					status = self.metadata["Status"][self.phage_index[phage]]
-					if status != "draft":
-						auto_chosen_phages.append(phage)
+				phages = self.metadata[self.metadata["Status"] != b'draft']
+				for phage in phages:
+					if phage["Status"] != 'draft'.encode('utf-8'):
+						phageid = phage["PhageID"].decode('utf-8')
+						auto_chosen_phages.append(phageid)
 			else:
-				for phage in self.available_phages:
-						auto_chosen_phages.append(phage)
+				phages = self.metadata
+				for phage in phages:
+					phageid = phage["PhageID"].decode('utf-8')
+					auto_chosen_phages.append(phageid)
 
 			available_indices = range(0, len(auto_chosen_phages))
 			indices = random.sample(available_indices, int(len(
@@ -604,9 +636,11 @@ class FinalizePhage(Frame):
 			indices.sort()
 			for index in indices:
 				phage = auto_chosen_phages[index]
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
+				data = self.metadata[self.metadata["PhageID"] ==
+									 phage.encode('utf-8')]
+				host = data["HostStrain"][0].decode('utf-8')
+				cluster = data["Cluster"][0].decode('utf-8')
+				status = data["Status"][0].decode('utf-8')
 				add = "\t({}, {}, {})".format(host, cluster, status)
 				display = "".join(["{:<20}".format(phage), "{:<40}".format(
 					add)])
@@ -622,10 +656,12 @@ class FinalizePhage(Frame):
 
 		self.bottom_button_frame = Frame(self.viewer)
 		self.back_button = Button(self.bottom_button_frame, text="Back",
+								  font=controller.font,
 								  command=self.back)
 		self.back_button.pack(side=LEFT, anchor=SW, fill=None, expand=True)
 		self.next_button = Button(self.bottom_button_frame,
 								  text="Make Nexus File",
+								  font=controller.font,
 								  command=self.make_nexus)
 		self.next_button.pack(side=LEFT, anchor=SE, fill=None, expand=True)
 		self.bottom_button_frame.pack(side=BOTTOM, anchor=S, fill=X,
@@ -635,115 +671,59 @@ class FinalizePhage(Frame):
 
 	def sort(self, mode):
 		# Empty the available list
-		available = self.available_phages
 		while len(self.available_list.get(0, END)) > 0:
 			self.available_list.delete(END)
 
 		# Get selected list and then empty it
 		selected_phages = list()
-		selected_hosts = list()
-		selected_clusters = list()
 		selection = self.selected_list.get(0, END)
 		for select in selection:
 			selected_phages.append(select.split()[0])
-			selected_hosts.append(select.split()[1].lstrip("(").rstrip(","))
-			selected_clusters.append(select.split()[2].rstrip(","))
 		while len(self.selected_list.get(0, END)) > 0:
 			self.selected_list.delete(END)
 
 		# Sort by PhageID
 		if mode == 0:
-			available = sorted(available)
-			selected = sorted(selected_phages)
+			self.metadata = np.sort(self.metadata, order=["PhageID"])
 
-			for phage in available:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
-				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), "{:<40}".format(
-					add)])
-				self.available_list.insert(END, display)
-
-			for phage in selected:
-				host = self.metadata["HostStrain"][self.phage_index[phage]]
-				cluster = self.metadata["Cluster"][self.phage_index[phage]]
-				status = self.metadata["Status"][self.phage_index[phage]]
-				add = "\t({}, {}, {})".format(host, cluster, status)
-				display = "".join(["{:<20}".format(phage), "{:<40}".format(
-					add)])
-				self.selected_list.insert(END, display)
-
+		# Sort by HostStrain, then PhageID
 		elif mode == 1:
-			available_hosts = self.available_hosts
-			for host in available_hosts:
-				host_phages = sorted(self.host_to_phage[host])
-				for phage in host_phages:
-					cluster = self.metadata["Cluster"][self.phage_index[phage]]
-					status = self.metadata["Status"][self.phage_index[phage]]
-					add = "\t({}, {}, {})".format(host, cluster, status)
-					display = "".join(["{:<20}".format(phage), "{:<40}".format(
-						add)])
-					self.available_list.insert(END, display)
+			self.metadata = np.sort(self.metadata, order=["HostStrain",
+														  "PhageID"])
 
-			selected_hosts = sorted(list(set(selected_hosts)))
-			for host in selected_hosts:
-				host_phages = sorted(self.host_to_phage[host])
-				for phage1 in host_phages:
-					for phage2 in selected_phages:
-						if phage1 == phage2:
-							cluster = self.metadata["Cluster"][
-								self.phage_index[phage1]]
-							status = self.metadata["Status"][
-								self.phage_index[phage1]]
-							add = "\t({}, {}, {})".format(host, cluster,
-														  status)
-							display = "".join(
-								["{:<20}".format(phage1), "{:<40}".format(
-									add)])
-							self.selected_list.insert(END, display)
-							continue
-
+		# Sort by Cluster, then PhageID
 		elif mode == 2:
-			available_clusters = self.available_clusters
-			for cluster in available_clusters:
-				cluster_phages = sorted(self.cluster_to_phage[cluster])
-				for phage in cluster_phages:
-					host = self.metadata["HostStrain"][self.phage_index[phage]]
-					cluster = self.metadata["Cluster"][self.phage_index[phage]]
-					status = self.metadata["Status"][self.phage_index[phage]]
-					add = "\t({}, {}, {})".format(host, cluster, status)
-					display = "".join(["{:<20}".format(phage), "{:<40}".format(
-						add)])
-					self.available_list.insert(END, display)
+			self.metadata = np.sort(self.metadata, order=["Cluster",
+														  "HostStrain",
+														  "PhageID"])
 
-			selected_clusters = sorted(list(set(selected_clusters)))
-			for cluster in selected_clusters:
-				cluster_phages = sorted(self.cluster_to_phage[cluster])
-				for phage1 in cluster_phages:
-					for phage2 in selected_phages:
-						if phage1 == phage2:
-							host = self.metadata["HostStrain"][
-								self.phage_index[phage1]]
-							status = self.metadata["Status"][
-								self.phage_index[phage1]]
-							add = "\t({}, {}, {})".format(host, cluster,
-														  status)
-							display = "".join(
-								["{:<20}".format(phage1), "{:<40}".format(
-									add)])
-							self.selected_list.insert(END, display)
-							continue
-		return
+		self.phages = list(self.metadata["PhageID"])
+		self.phages = [phage.decode('utf-8') for phage in self.phages]
+
+		for phage in self.metadata:
+			phageid = phage["PhageID"].decode('utf-8')
+			host = phage["HostStrain"].decode('utf-8')
+			cluster = phage["Cluster"].decode('utf-8')
+			status = phage["Status"].decode('utf-8')
+			add = "\t({}, {}, {})".format(host, cluster, status)
+			display = "".join(["{:<20}".format(phageid), "{:<40}".format(
+				add)])
+			self.available_list.insert(END, display)
+
+			if phageid in selected_phages:
+				self.selected_list.insert(END, display)
 
 	def add(self):
 		sel = self.available_list.curselection()
 		for i in sel:
-			add_name = self.available_phages[i]
+			add_name = self.phages[i]
+			print(i, add_name)
 			if add_name not in self.selected_list.get(0, END):
-				host = self.metadata["HostStrain"][self.phage_index[add_name]]
-				cluster = self.metadata["Cluster"][self.phage_index[add_name]]
-				status = self.metadata["Status"][self.phage_index[add_name]]
+				data = self.metadata[self.metadata["PhageID"] ==
+									 add_name.encode('utf-8')]
+				host = data["HostStrain"][0].decode('utf-8')
+				cluster = data["Cluster"][0].decode('utf-8')
+				status = data["Status"][0].decode('utf-8')
 				add = "\t({}, {}, {})".format(host, cluster, status)
 				display = "".join(["{:<20}".format(add_name), "{:<40}".format(
 					add)])
