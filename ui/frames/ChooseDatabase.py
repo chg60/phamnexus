@@ -47,8 +47,8 @@ class ChooseDatabase(Frame):
     def next(self):
         self.controller.selected_database = \
             self.controller.available_databases[self.db_selection.get()]
-        # self.controller.update_database()
-        self.controller.get_metadata()
+        self.controller.update_database()
+        self.controller.get_phages()
         self.controller.redraw_window(frame=int(3 + self.controller.runmode))
 
     def back(self):
