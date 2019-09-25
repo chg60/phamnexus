@@ -21,8 +21,6 @@ class DatabaseUpdater:
         :param controller: reference to the main window controller
         """
         self.controller = controller
-        self.font_family = self.controller.font_family
-        self.font_size = self.controller.font_size
         self.handler = handler
 
         self.local_version = None
@@ -81,8 +79,9 @@ class DatabaseUpdater:
         attempts_remain = 3
         while attempts_remain > 0:
             attempts_remain -= 1
-            self.handler.username, self.handler.password = \
-                GetMySQLUserPassDialog(self).wait_window()
+            GetMySQLUserPassDialog(controller=self.controller,
+                                   parent=self.controller.window.root,
+                                   title="MySQL Admin Login")
             if self.validate_admin_credentials():
                 return
             if attempts_remain != 0:
