@@ -71,6 +71,7 @@ def get_phages(handler):
         handler.close_connection()
 
     phage_array = np.array(values, dtype=dtype)
+    phage_array = np.sort(phage_array, order=["PhageID"])
 
     return phage_array
 

@@ -18,9 +18,9 @@ class FinalizePhage(Frame):
 		self.status = self.controller.final_status
 
 		self.metadata = controller.metadata
-		self.phages = sorted(controller.available_phages)
-		self.hosts = sorted(controller.available_hosts)
-		self.clusters = sorted(controller.available_clusters)
+		self.phages = controller.available_phages
+		self.hosts = controller.available_hosts
+		self.clusters = controller.available_clusters
 
 		# List of ways that the PhageIDs can be sorted
 		self.sort_mode = IntVar()

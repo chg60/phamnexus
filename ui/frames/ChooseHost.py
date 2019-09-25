@@ -9,7 +9,7 @@ class ChooseHost(Frame):
         self.controller = controller
         self.root = root
 
-        self.hosts = sorted(controller.available_hosts)
+        self.hosts = controller.available_hosts
 
         # Frame to hold all widgets on this page
         self.viewer = Frame(self)
@@ -17,7 +17,7 @@ class ChooseHost(Frame):
         self.instruction_label = Label(self.instruction_frame,
                                        text="3. Choose the hosts whose "
                                             "phages will be included in "
-                                            "the splistree diagram, then "
+                                            "the Splistree diagram, then "
                                             "click 'Next'.",
                                        font=self.controller.font)
         self.instruction_label.pack(side=LEFT, anchor=NW, fill=None,
@@ -100,6 +100,7 @@ class ChooseHost(Frame):
         sel = self.available_list.curselection()
         for i in sel:
             add_name = self.hosts[i]
+            print(i, add_name)
             if add_name not in self.selected_list.get(0, END):
                 self.selected_list.insert(END, add_name)
         return

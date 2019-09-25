@@ -140,7 +140,7 @@ class MainWindowController:
         them to utf-8 strings, and adds them to self.available_hosts.
         :return:
         """
-        for host in np.unique(self.metadata["HostStrain"]):
+        for host in list(np.unique(self.metadata["HostStrain"])):
             self.available_hosts.append(host.decode("utf-8"))
 
     def update_available_clusters(self):
@@ -150,7 +150,7 @@ class MainWindowController:
         self.available_clusters.
         :return:
         """
-        for cluster in np.unique(self.metadata["Cluster"]):
+        for cluster in list(np.unique(self.metadata["Cluster"])):
             self.available_clusters.append(cluster.decode("utf-8"))
 
     def update_available_phages(self):
@@ -160,7 +160,7 @@ class MainWindowController:
         self.available_phages.
         :return:
         """
-        for phage in np.unique(self.metadata["PhageID"]):
+        for phage in list(np.unique(self.metadata["PhageID"])):
             self.available_phages.append(phage.decode("utf-8"))
 
     def get_phages(self):

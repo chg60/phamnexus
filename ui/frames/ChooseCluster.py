@@ -10,7 +10,7 @@ class ChooseCluster(Frame):
         self.controller = controller
         self.root = root
 
-        self.clusters = sorted(controller.available_clusters)
+        self.clusters = controller.available_clusters
 
         self.viewer = Frame(self)
 
