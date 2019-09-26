@@ -1,6 +1,6 @@
 from tkinter import *
 
-from data.constants import RUNMODES
+from data.constants import *
 
 
 class ChooseRunmode(Frame):
@@ -18,19 +18,21 @@ class ChooseRunmode(Frame):
 		self.final_only.set(value=0)
 
 		self.viewer = Frame(self)
+		self.labels = LABELS["RunmodeFrame"]
 
 		self.prompt_frame = Frame(self.viewer)
 		self.prompt_label = Label(self.prompt_frame,
-								  text="1. Choose your desired runmode:",
+								  text=self.labels["Instruct"][0],
 								  font=self.controller.font)
 		self.prompt_label.pack(side=TOP, anchor=W, fill=None, expand=True)
 
-		for i in range(len(RUNMODES)):
-			temp_radio = Radiobutton(master=self.prompt_frame,
-									 variable=self.runmode_selection,
-									 value=i, text=RUNMODES[i],
-									 font=self.controller.font)
-			temp_radio.pack(side=TOP, anchor=W, fill=None, expand=True)
+		for i in range(len(self.labels["Runmodes"])):
+			radio = Radiobutton(master=self.prompt_frame,
+								font=self.controller.font,
+								variable=self.runmode_selection,
+								text=self.labels["Runmodes"][i],
+								value=i)
+			radio.pack(side=TOP, anchor=W, fill=None, expand=True)
 
 		self.prompt_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
 
@@ -53,6 +55,8 @@ class ChooseRunmode(Frame):
 		self.viewer.pack(side=TOP, anchor=CENTER, fill=BOTH, expand=True)
 
 	def next(self):
+		runmode = self.runmode_selection.get()
+		print("Runmode selected: {}".format(runmode))
 		self.controller.runmode = self.runmode_selection.get()
 		self.controller.final_status = self.final_only.get()
 		self.controller.redraw_window(frame=2)

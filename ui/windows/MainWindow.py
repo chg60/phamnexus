@@ -4,7 +4,7 @@ from ui.frames.ChooseRunmode import ChooseRunmode
 from ui.frames.ChooseDatabase import ChooseDatabase
 from ui.frames.ChooseHost import ChooseHost
 from ui.frames.ChooseCluster import ChooseCluster
-from ui.frames.draft_FinalizePhage import FinalizePhage
+from ui.frames.FinalizePhage import FinalizePhage
 
 
 class MainWindow:

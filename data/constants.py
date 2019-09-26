@@ -7,13 +7,6 @@ GIT_MASTER = "https://gihub.com/chg60/phamnexus"
 GIT_VERSION = "https://raw.github.com/chg60/phamnexus/master/data/version.txt"
 GIT_APP = "https://raw.github.com/chg60/phamnexus/master/MacOS-version{}.zip"
 
-# Possible runmodes
-RUNMODES = ["Compare phages from selected hosts",
-            "Compare phages from selected clusters",
-            "Choose my own phages",
-            "Compare random phages",
-            "Compare all phages"]
-
 # Default credentials
 DEFAULT_USER = "anonymous"
 DEFAULT_PASS = "anonymous"
@@ -23,9 +16,20 @@ DOWNLOAD_DIR = os.path.expanduser("~") + "/Downloads/"
 
 # Labels for Buttons/Frames
 LABELS = {
-    "RunmodeFrame": [],
-    "DatabaseFrame": [],
-    "HostFrame": [],
+    "RunmodeFrame": {
+        "Instruct": ["Choose your desired runmode:"],
+        "Runmodes": ["Compare phages from selected hosts",
+                     "Compare phages from selected clusters",
+                     "Choose my own phages",
+                     "Compare all phages",
+                     "Compare random phages"]
+    },
+    "DatabaseFrame": {
+        "Instruct": []
+    },
+    "HostFrame": {
+        "Instruct": []
+    },
     "ClusterFrame": {
         "Instruct": [""]
     },
