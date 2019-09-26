@@ -21,6 +21,36 @@ DEFAULT_PASS = "anonymous"
 # Downloads will be put in user's Downloads folder
 DOWNLOAD_DIR = os.path.expanduser("~") + "/Downloads/"
 
+# Labels for Buttons/Frames
+LABELS = {
+    "RunmodeFrame": [],
+    "DatabaseFrame": [],
+    "HostFrame": [],
+    "ClusterFrame": {
+        "Instruct": [""]
+    },
+    "PhageFrame": {
+        "Sort": ["Sort by PhageID (default)",
+                 "Sort by Host, PhageID",
+                 "Sort by Cluster, PhageID"],
+        "Instruct": ["Phage selection has been auto-filled based on your "
+                     "host and status selections. You may add or remove "
+                     "additional phages.",
+                     "Phage selection has been auto-filled based on your "
+                     "cluster and status selections. You may add or "
+                     "remove additional phages.",
+                     "Choose the phages you want included in the "
+                     "Splistree diagram, then click 'Make Nexus File'.",
+                     "All phages have been selected. Just click 'Make "
+                     "Nexus File' to use all phages, or select phages "
+                     "you wish to exclude, and remove them from the "
+                     "selection first.",
+                     "Random phages have been selected.  Just click 'Make "
+                     "Nexus File' to use these phages, or you can modify "
+                     "the selected list first."]
+    }
+}
+
 # Error messages for SHOWINFO messages
 ERROR_MESSAGES = {"failed_login":  "A connection to MySQL could not be "
                                    "established using the provided username "
