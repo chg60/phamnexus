@@ -1,6 +1,7 @@
 import pymysql as pms
 import requests
-import os
+import shlex
+from subprocess import Popen
 from tkinter.messagebox import showinfo
 from tkinter.messagebox import askyesno
 
@@ -170,16 +171,21 @@ class DatabaseUpdater:
                          message="Failed to download updates.")
                 return
             try:
-                transaction = ["SOURCE {}/{}.sql".format(DOWNLOAD_DIR,
-                                                         self.handler.database)]
-                self.handler.execute_transaction(transaction)
+                command = "mysql -u {} -p{} {} < {}/{}.sql".format(
+                    self.handler.username, self.handler.password,
+                    self.handler.database, DOWNLOAD_DIR,
+                    self.handler.database)
+                command = shlex.split(command)
+                Popen(args=command).wait()
             except pms.err.OperationalError:
                 showinfo(title="MySQL Error",
                          message="Failed to import new database version.")
                 return
             try:
-                os.system("rm {}/{}.sql".format(DOWNLOAD_DIR,
-                                                self.handler.database))
+                command = "rm {}/{}.sql".format(DOWNLOAD_DIR,
+                                                self.handler.database)
+                command = shlex.split(command)
+                Popen(args=command).wait()
             except OSError:
                 print("Failed to delete {}/{}.sql".format(DOWNLOAD_DIR,
                                                           self.handler.database))
