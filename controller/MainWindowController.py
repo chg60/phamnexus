@@ -47,6 +47,7 @@ class MainWindowController:
         # User selections
         self.runmode = None
         self.exclude_draft = False
+        self.append_cluster = False
 
         self.selected_database = None
         self.selected_hosts = list()
@@ -212,7 +213,13 @@ class MainWindowController:
             # simplicity, processing is done the same as other runmodes.
             results = get_phams_by_phage(handler=handler,
                                          phage=phage)
-            phages_and_phams[phage] = results
+            if self.append_cluster:
+                data = self.metadata[self.metadata["PhageID"] ==
+                                     phage.encode('utf-8')]
+                cluster = data["Cluster"][0].decode('utf-8')
+                phages_and_phams[phage+"_{}".format(cluster)] = results
+            else:
+                phages_and_phams[phage] = results
             for pham in results:
                 all_phams.append(pham)
 

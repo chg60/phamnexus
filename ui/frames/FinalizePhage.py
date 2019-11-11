@@ -1,8 +1,9 @@
 from tkinter import *
 from tkinter.filedialog import asksaveasfilename
 from tkinter.messagebox import showinfo
-import random
+
 import numpy as np
+
 from data.constants import LABELS
 
 
@@ -16,7 +17,7 @@ class FinalizePhage(Frame):
 
         # Get selection data from
         self.runmode = self.controller.runmode
-        self.status = self.controller.final_status
+        self.status = self.controller.exclude_draft
 
         self.metadata = controller.metadata
         self.phages = controller.available_phages
@@ -26,6 +27,8 @@ class FinalizePhage(Frame):
         # List of ways that the PhageIDs can be sorted
         self.sort_mode = IntVar()
         self.sort_mode.set(value=0)
+        self.append_cluster = IntVar()
+        self.append_cluster.set(value=0)
         self.labels = LABELS["PhageFrame"]
 
         # Viewer frame to hold all runmode-specific widgets - layout is
@@ -108,6 +111,16 @@ class FinalizePhage(Frame):
         self.chose_list.pack(side=LEFT, anchor=N, fill=None, expand=True)
         self.chose_frame.pack(side=LEFT, anchor=N, fill=None, expand=True)
         self.select_frame.pack(side=TOP, anchor=CENTER, fill=BOTH, expand=True)
+
+        # Frame to hold checkbox to append subcluster to phage name in nexus
+        # file
+        self.checkbutton_frame = Frame(master=self.viewer)
+        self.checkbutton = Checkbutton(self.checkbutton_frame,
+                                       font=controller.font,
+                                       text="Append cluster to phage name?",
+                                       variable=self.append_cluster)
+        self.checkbutton.pack(side=TOP, anchor=NW, fill=None, expand=True)
+        self.checkbutton_frame.pack(side=TOP, anchor=N, fill=X, expand=True)
 
         # Bottom button frame to store back/make nexus buttons
         self.main_button_frame = Frame(master=self.viewer)
@@ -346,6 +359,6 @@ class FinalizePhage(Frame):
             return
 
         self.controller.selected_phages = list(selection)
-
+        self.controller.append_cluster = self.append_cluster.get()
         self.controller.make_nexus(filename=result)
         self.controller.redraw_window(frame=1)

@@ -30,11 +30,11 @@ class MainWindow:
 
 		# Create file menu
 		self.file = Menu(self.menu_bar, tearoff=0)
-		self.file.add_command(label="Preferences",
-							  font=controller.font,
-							  command=None)
+		# self.file.add_command(label="Preferences",
+		# 					  font=controller.font,
+		# 					  command=None)
 		# self.controller.edit_preferences)
-		self.file.add_separator()
+		# self.file.add_separator()
 		self.file.add_command(label="Quit",
 							  font=controller.font,
 							  command=self.controller.quit)

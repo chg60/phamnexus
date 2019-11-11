@@ -58,5 +58,5 @@ class ChooseRunmode(Frame):
 		runmode = self.runmode_selection.get()
 		print("Runmode selected: {}".format(runmode))
 		self.controller.runmode = self.runmode_selection.get()
-		self.controller.final_status = self.final_only.get()
+		self.controller.exclude_draft = self.final_only.get()
 		self.controller.redraw_window(frame=2)
