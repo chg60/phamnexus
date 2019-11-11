@@ -19,7 +19,7 @@ LABELS = {
     "RunmodeFrame": {
         "Instruct": ["Choose your desired runmode:"],
         "Runmodes": ["Compare phages from selected hosts",
-                     "Compare phages from selected clusters",
+                     "Compare phages from selected subclusters",
                      "Choose my own phages",
                      "Compare all phages",
                      "Compare random phages"]

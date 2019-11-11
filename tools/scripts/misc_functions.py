@@ -42,7 +42,7 @@ def get_phages(handler):
     """
     # Initialize phage data dictionary
     dtype = [("PhageID", "S14"), ("HostStrain", "S20"), ("Cluster", "S12"),
-             ("Status", "S5")]
+             ("Status", "S7")]
     values = []
     # Query for MySQL
     query = "SELECT PhageID, HostStrain, Cluster2, Subcluster2, status FROM " \
@@ -55,12 +55,16 @@ def get_phages(handler):
             value = list()
             value.append(result["PhageID"])
             value.append(result["HostStrain"])
+            # No cluster designation is singleton
             if result["Cluster2"] is None:
                 value.append("Singleton")
-            elif result["Cluster2"] == "UNK":
-                value.append("Unclustered")
+            # No subcluster designation is cluster
             elif result["Subcluster2"] is None:
                 value.append(result["Cluster2"])
+            # UNK cluster is unclustered
+            elif result["Cluster2"] == "UNK":
+                value.append("Unclustered")
+
             else:
                 value.append(result["Subcluster2"])
             value.append(result["status"])

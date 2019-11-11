@@ -156,6 +156,14 @@ class FinalizePhage(Frame):
         # List to store the phage selection
         pre_selected_phages = list()
 
+        # Filter phages available for pre-selection to those that meet status
+        # specifications
+        if self.status == 1:
+            status = "draft".encode('utf-8')
+            filtered_phages = self.metadata[self.metadata["Status"] != status]
+        else:
+            filtered_phages = self.metadata
+
         # Runmode 0 bases pre-selection on Host
         if self.runmode == 0:
             print("Choosing phages based on hosts")
@@ -167,7 +175,7 @@ class FinalizePhage(Frame):
             # Iterate through selected hosts
             for host in chosen_hosts:
                 # Subset the array based on current host selection
-                phages = self.metadata[self.metadata["HostStrain"] == host]
+                phages = filtered_phages[filtered_phages["HostStrain"] == host]
                 # Add those phages to the pre-selection
                 for phage in phages:
                     phageid = phage["PhageID"].decode('utf-8')
@@ -184,7 +192,7 @@ class FinalizePhage(Frame):
             # Iterate through selected clusters
             for cluster in chosen_clusters:
                 # Subset the array based on current cluster selection
-                phages = self.metadata[self.metadata["Cluster"] == cluster]
+                phages = filtered_phages[filtered_phages["Cluster"] == cluster]
                 # Add those phages to the pre-selection
                 for phage in phages:
                     phageid = phage["PhageID"].decode('utf-8')
@@ -199,7 +207,7 @@ class FinalizePhage(Frame):
         elif self.runmode == 3:
             print("Choosing all phages")
             # "Subset" to all phages
-            phages = self.metadata
+            phages = filtered_phages
             # Add those phages to the pre-selection
             for phage in phages:
                 phageid = phage["PhageID"].decode('utf-8')
@@ -208,15 +216,33 @@ class FinalizePhage(Frame):
         # Runmode 4 randomly selects phages, respecting Status selection
         else:
             print("Choosing random phages")
-            # "Subset" to all phages
-            phages = self.metadata
-            available_indices = range(0, phages.shape[0])
-            choose_indices = random.sample(available_indices,
-                                           int(len(available_indices)/5))
-            choose_indices.sort()
-            for index in choose_indices:
-                phageid = phages[index]["PhageID"].decode('utf-8')
-                pre_selected_phages.append(phageid)
+            # All available sub-clusters
+            subclusters = list(set([subcluster.decode("utf-8") for subcluster
+                               in filtered_phages['Cluster']]))
+            for subcluster in sorted(subclusters):
+                all_members = filtered_phages[filtered_phages["Cluster"] ==
+                                              subcluster.encode("utf-8")]
+                if subcluster[-1].isdigit():
+                    # Found a subcluster - grab first member
+                    phageid = all_members[0]["PhageID"].decode("utf-8")
+                    pre_selected_phages.append(phageid)
+                    print("Grabbed {} from {}".format(phageid, subcluster))
+                else:
+                    # Found a candidate for non-subclustered genomes
+                    if (subcluster + "1" in subclusters) or \
+                            (subcluster == "Singleton") or \
+                            (subcluster == "UNK"):
+                        # If other subclusters exist, definitely found
+                        # non-subclustered genomes - take all
+                        for phage in all_members:
+                            phageid = phage["PhageID"].decode("utf-8")
+                            pre_selected_phages.append(phageid)
+                        print("Grabbed all members from {}".format(subcluster))
+                    else:
+                        # Just another subcluster
+                        phageid = all_members[0]["PhageID"].decode("utf-8")
+                        pre_selected_phages.append(phageid)
+                        print("Grabbed {} from {}".format(phageid, subcluster))
 
         # Populate pre-selected phages into chose_list
         print("Chose {} phages".format(len(pre_selected_phages)))
@@ -226,10 +252,6 @@ class FinalizePhage(Frame):
             host = data['HostStrain'][0].decode('utf-8')
             cluster = data['Cluster'][0].decode('utf-8')
             status = data['Status'][0].decode('utf-8')
-            # Respect status-selection when pre-selecting phages for user
-            if self.status == 1 and status == 'draft':
-                print("Eliminating {} because status is draft".format(phage))
-                continue
             add = "\t({}, {}, {})".format(host, cluster, status)
             display = "".join(["{:<20}".format(phage), "{:<40}".format(
                 add)])
