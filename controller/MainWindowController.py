@@ -262,7 +262,7 @@ class MainWindowController:
                      message="Updates were successfully "
                              "downloaded. Close application and "
                              "restart it to apply updates.")
-            
+
         return
 
     @staticmethod
