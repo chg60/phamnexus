@@ -49,9 +49,9 @@ class MainWindow:
         self.help.add_command(label="Report a Bug",
                               font=controller.font,
                               command=self.controller.report_bug)
-        # self.help.add_command(label="Check for Updates",
-        # 					  font=controller.font,
-        # 					  command=self.controller.check_updates)
+        self.help.add_command(label="Check for Updates",
+                              font=controller.font,
+                              command=self.controller.check_updates)
         self.menu_bar.add_cascade(menu=self.help, label="Help",
                                   font=controller.font)
 
