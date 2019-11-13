@@ -41,7 +41,7 @@ def get_phages(handler):
     :return:
     """
     # Initialize phage data dictionary
-    dtype = [("PhageID", "S14"), ("HostStrain", "S20"), ("Cluster", "S12"),
+    dtype = [("PhageID", "S20"), ("HostStrain", "S20"), ("Cluster", "S12"),
              ("Status", "S7")]
     values = []
     # Query for MySQL

@@ -1,24 +1,15 @@
-import json
-import os
-import platform
 import sys
-import webbrowser
-import requests
 import tkinter as tk
-import numpy as np
-
+import webbrowser
 from tkinter.messagebox import showinfo, askyesnocancel
 
+from data.constants import *
+from tools.objects.DatabaseUpdater import DatabaseUpdater
 from tools.objects.MySQLConnectionHandler import MySQLConnectionHandler
 from tools.objects.NexusHandler import NexusHandler
-from tools.objects.DatabaseUpdater import DatabaseUpdater
-from tools.scripts.misc_functions import *
+from tools.functions.misc_functions import *
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
 from ui.windows.MainWindow import MainWindow
-from data.constants import *
-
-if platform.system().lower() == "darwin":
-    import _cffi_backend
 
 
 class MainWindowController:
@@ -241,7 +232,7 @@ class MainWindowController:
         showinfo(title="Nexus file complete",
                  message=ERROR_MESSAGES["nexus_done"])
 
-    def check_updates(self):
+    """def check_updates(self):
         # local version
         try:
             f = open("version.txt", "r")
@@ -320,9 +311,10 @@ class MainWindowController:
                                                  "window. The repository "
                                                  "can be downloaded from "
                                                  "https://github.com/chg60/phamnexus")
-        return
+        return"""
 
-    def documentation(self):
+    @staticmethod
+    def documentation():
         response = askyesnocancel(title="Open Browser Window?",
                                   message="Do you want to launch this "
                                           "program's documentation in a "
@@ -339,7 +331,8 @@ class MainWindowController:
                              "can be found at "
                              "https://github.com/chg60/phamnexus/wiki.")
 
-    def report_bug(self):
+    @staticmethod
+    def report_bug():
         """
         Asks for confirmation to open github issues page in browser.
         If cancel or no, do nothing. Else, open new tab in browser.
@@ -352,7 +345,7 @@ class MainWindowController:
                                           "feature requests can be made?",
                                   default=tk.messagebox.CANCEL)
 
-        # If they said no or cance, do nothing
+        # If they said no or cancel, do nothing
         if response is None or response is False:
             return
 

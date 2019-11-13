@@ -1,5 +1,5 @@
 from tkinter import *
-from tools.scripts.misc_functions import *
+from tools.functions.misc_functions import *
 
 
 class ChooseCluster(Frame):

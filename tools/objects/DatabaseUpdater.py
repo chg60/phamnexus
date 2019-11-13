@@ -171,12 +171,13 @@ class DatabaseUpdater:
                          message="Failed to download updates.")
                 return
             try:
-                command = "mysql -u {} -p{} {} < {}/{}.sql".format(
+                command = "mysql -u {} -p{} {}".format(
                     self.handler.username, self.handler.password,
-                    self.handler.database, DOWNLOAD_DIR,
                     self.handler.database)
                 command = shlex.split(command)
-                Popen(args=command).wait()
+                f = open("{}/{}.sql".format(DOWNLOAD_DIR, self.handler.database))
+                Popen(args=command, stdin=f).wait()
+                f.close()
             except pms.err.OperationalError:
                 showinfo(title="MySQL Error",
                          message="Failed to import new database version.")
