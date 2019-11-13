@@ -245,7 +245,7 @@ class MainWindowController:
         # Then check status
         command = shlex.split("git status")
         with Popen(command, stdout=PIPE) as proc:
-            if no_updates in proc.stdout.read():
+            if no_updates in proc.stdout:
                 showinfo(title="No Updates Available",
                          message=ERROR_MESSAGES["no_upd_avail"])
                 return
