@@ -1,6 +1,7 @@
 import sys
 import tkinter as tk
 import webbrowser
+from subprocess import Popen, PIPE
 from tkinter.messagebox import showinfo, askyesnocancel
 
 from data.constants import *
@@ -232,86 +233,37 @@ class MainWindowController:
         showinfo(title="Nexus file complete",
                  message=ERROR_MESSAGES["nexus_done"])
 
-    """def check_updates(self):
-        # local version
-        try:
-            f = open("version.txt", "r")
-        except FileNotFoundError:
-            f = open("data/version.txt", "r")
-        local_version = f.readline()
-        f.close()
+    def check_updates(self):
+        # Git method
+        no_updates = "Your branch is up to date with 'origin/master'."
 
-        # remote version
-        response = requests.get(GIT_VERSION)
-        remote_version = response.text.rstrip("\n")
-        if remote_version > local_version:
-            update = askyesnocancel(title="Updates Available",
-                                    message=ERROR_MESSAGES["app_upd_avail"])
-        else:
-            showinfo(title="No Updates Available",
-                     message=ERROR_MESSAGES["no_upd_avail"])
-            update = False
-        if update is True:
-            if platform.system().lower() == "darwin":
-                status = update_mac_application(remote_version)
-                if status == 0:
-                    showinfo(title="Download Complete",
-                             message=ERROR_MESSAGES["download_done"])
+        # First check for updates
+        command = shlex.split("git remote update")
+        with Popen(command, stdout=PIPE) as proc:
+            proc.wait()
+
+        # Then check status
+        command = shlex.split("git status")
+        with Popen(command, stdout=PIPE) as proc:
+            if no_updates in proc.stdout.read():
+                showinfo(title="No Updates Available",
+                         message=ERROR_MESSAGES["no_upd_avail"])
+                return
             else:
+                update = askyesnocancel(title="Updates Available",
+                                        message=ERROR_MESSAGES["app_upd_avail"])
 
-                try_git = askyesnocancel(title="Update with Git?",
-                                         message="Would you like updates to "
-                                                 "be attempted using git?",
-                                         default=tk.messagebox.CANCEL)
-                if try_git is None:
-                    return
-                elif try_git is False:
-                    try_manual = askyesnocancel(title="Update Manually?",
-                                                message="Would you like to "
-                                                        "download updates "
-                                                        "manually?")
-                    if try_manual is None or try_manual is False:
-                        return
-                    else:
-                        try:
-                            webbrowser.open_new_tab(
-                                "https://github.com/chg60/phamnexus")
-                        except webbrowser.Error:
-                            showinfo(title="Failed To Open Browser",
-                                     message="Unable to open a browser "
-                                             "window. The repository "
-                                             "can be downloaded from "
-                                             "https://github.com/chg60/phamnexus")
-
-                elif try_git is True:
-                    try:
-                        os.system("git remote update; git pull")
-                        showinfo(title="Updates Downloaded",
-                                 message="Updates were successfully "
-                                         "downloaded. Close application and "
-                                         "restart it to apply updates.")
-                    except OSError:
-                        showinfo(title="Update Failure",
-                                 message="Updates couldn't be retrieved "
-                                         "automatically.")
-                        try_manual = askyesnocancel(title="Update Manually?",
-                                                    message="Would you like "
-                                                            "to download "
-                                                            "updates "
-                                                            "manually?")
-                        if try_manual is None or try_manual is False:
-                            return
-                        else:
-                            try:
-                                webbrowser.open_new_tab(
-                                    "https://github.com/chg60/phamnexus")
-                            except webbrowser.Error:
-                                showinfo(title="Failed To Open Browser",
-                                         message="Unable to open a browser "
-                                                 "window. The repository "
-                                                 "can be downloaded from "
-                                                 "https://github.com/chg60/phamnexus")
-        return"""
+        # If user said get updates, try
+        if update:
+            command = shlex.split("git pull")
+            with Popen(command, stdout=PIPE) as proc:
+                proc.wait()
+            showinfo(title="Updates Downloaded",
+                     message="Updates were successfully "
+                             "downloaded. Close application and "
+                             "restart it to apply updates.")
+            
+        return
 
     @staticmethod
     def documentation():
