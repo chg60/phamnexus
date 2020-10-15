@@ -176,12 +176,19 @@ class DatabaseUpdater:
                          message="Failed to download updates.")
                 return
             try:
+                command = "mysql -u {} -p{} -e 'DROP DATABASE {}; CREATE DATABASE {}".format(
+                    self.handler.username, self.handler.password, self.handler.database,
+                    self.handler.database, self.handler.database)
+                with Popen(shlex.split(command)) as proc:
+                    proc.wait()
+
                 command = "mysql -u {} -p{} {}".format(
                     self.handler.username, self.handler.password,
                     self.handler.database)
                 command = shlex.split(command)
                 f = open("{}/{}.sql".format(DOWNLOAD_DIR, self.handler.database))
-                Popen(args=command, stdin=f).wait()
+                with Popen(args=command, stdin=f) as proc:
+                    proc.wait()
                 f.close()
             except pms.err.OperationalError:
                 showinfo(title="MySQL Error",
