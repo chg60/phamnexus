@@ -1,6 +1,8 @@
 controller/__pycache__/*
+data/__pycache__/*
 ui/*/__pycache__/*
 */*/__pycache__/*
+.DS_Store/
 .idea/
 dist/*
 build/*

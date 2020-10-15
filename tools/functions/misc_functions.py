@@ -41,35 +41,34 @@ def get_phages(handler):
     :return:
     """
     # Initialize phage data dictionary
-    dtype = [("PhageID", "S20"), ("HostStrain", "S20"), ("Cluster", "S12"),
+    dtype = [("PhageID", "S20"), ("HostGenus", "S20"), ("Cluster", "S12"),
              ("Status", "S7")]
     values = []
     # Query for MySQL
-    query = "SELECT PhageID, HostStrain, Cluster2, Subcluster2, status FROM " \
+    query = "SELECT PhageID, HostGenus, Cluster, Subcluster, Status FROM " \
             "phage"
 
     try:
         handler.open_connection()
         results = handler.execute_query(query)
         for result in results:
-            value = list()
-            value.append(result["PhageID"])
-            value.append(result["HostStrain"])
-            # No cluster designation is singleton
-            if result["Cluster2"] is None:
-                value.append("Singleton")
-            # No subcluster designation is cluster
-            elif result["Subcluster2"] is None:
-                value.append(result["Cluster2"])
-            # UNK cluster is unclustered
-            elif result["Cluster2"] == "UNK":
-                value.append("Unclustered")
+            phageid = result["PhageID"]
+            host = result["HostGenus"]
+            cluster = result["Cluster"]
+            subcluster = result["Subcluster"]
+            status = result["Status"]
 
-            else:
-                value.append(result["Subcluster2"])
-            value.append(result["status"])
-            value = tuple(value)
+            if cluster is None:
+                cluster = "Singleton"
+            elif subcluster is not None:
+                cluster = subcluster
+            elif cluster == "UNK":
+                cluster = "Unclustered"
+
+            value = tuple([phageid, host, cluster, status])
+            print(value)
             values.append(value)
+
         handler.close_connection()
     except:
         handler.close_connection()
@@ -90,10 +89,8 @@ def get_phams_by_phage(handler, phage):
     :return pham_data: dictionary whose keys are phageids and whose
     values are the phams in that phageid.
     """
-    query = "SELECT * FROM (SELECT c.name FROM phage AS a INNER JOIN gene" \
-            " AS b ON a.PhageID = b.PhageID INNER JOIN pham AS c ON " \
-            "b.GeneID = c.GeneID WHERE a.PhageID = '{}') AS d ORDER BY " \
-            "name ASC".format(phage)
+    query = "SELECT PhamID FROM gene WHERE PhageID = '{}' ORDER BY PhamID " \
+            "ASC".format(phage)
     phams = list()
 
     try:
@@ -105,7 +102,7 @@ def get_phams_by_phage(handler, phage):
         return phams
 
     for result in results:
-        phams.append(result["name"])
+        phams.append(result["PhamID"])
     return phams
 
 

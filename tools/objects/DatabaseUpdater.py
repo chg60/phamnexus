@@ -1,5 +1,5 @@
 import pymysql as pms
-import requests
+import urllib3
 import shlex
 from subprocess import Popen
 from tkinter.messagebox import showinfo
@@ -7,6 +7,8 @@ from tkinter.messagebox import askyesno
 
 from ui.dialogs.GetUserPassDialog import GetMySQLUserPassDialog
 from data.constants import ERROR_MESSAGES, DOWNLOAD_DIR
+
+http_pool = urllib3.PoolManager()
 
 
 class DatabaseUpdater:
@@ -117,20 +119,21 @@ class DatabaseUpdater:
         :return: remote_version
         """
         try:
-            response = requests.get("{}/{}.version".format(
-                self.controller.server, self.handler.database))
-            if response.status_code == 404:
+            version_url = "{}/{}.version".format(self.controller.server,
+                                                 self.handler.database)
+            request = http_pool.request('GET', version_url)
+            if request.status == 404:
                 showinfo(title="404 Error",
                          message=ERROR_MESSAGES["404_db_update"].format(
                              self.handler.database))
                 remote_version = 0
-            elif response.status_code == 200:
-                remote_version = int(response.text.rstrip("\n"))
+            elif request.status == 200:
+                remote_version = int(request.data.rstrip())
             else:
-                showinfo(title="{} Error".format(response.status_code),
+                showinfo(title="{} Error".format(request.status),
                          message=ERROR_MESSAGES["unk_db_update"])
                 remote_version = 0
-        except requests.exceptions.ConnectionError:
+        except:
             remote_version = 0
 
         return remote_version
@@ -160,13 +163,15 @@ class DatabaseUpdater:
         if self.do_update:
 
             try:
-                response = requests.get("{}/{}.sql".format(
-                    self.controller.server, self.handler.database))
-                g = open("{}/{}.sql".format(DOWNLOAD_DIR,
-                                            self.handler.database), "w")
-                g.write(response.text)
-                g.close()
-            except requests.exceptions.ConnectionError:
+                db_url = "{}/{}.sql".format(self.controller.server,
+                                            self.handler.database)
+
+                request = http_pool.request('GET', db_url, preload_content=False)
+                if request.status == 200:
+                    with open("{}/{}.sql".format(DOWNLOAD_DIR, self.handler.database), "wb") as fh:
+                        for chunk in request.stream(512000):
+                            fh.write(chunk)
+            except:
                 showinfo(title="Connection Error",
                          message="Failed to download updates.")
                 return

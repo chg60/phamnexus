@@ -75,7 +75,7 @@ class FinalizePhage(Frame):
                                  text="Available Phages")
         self.avail_label.pack(side=TOP, anchor=N, fill=None, expand=True)
         self.avail_list = Listbox(master=self.avail_frame,
-                                  width=45, height=30,
+                                  width=50, height=25,
                                   font=controller.font,
                                   selectmode=EXTENDED)
 
@@ -105,7 +105,7 @@ class FinalizePhage(Frame):
         self.chose_label.pack(side=TOP, anchor=N, fill=None, expand=True)
 
         self.chose_list = Listbox(master=self.chose_frame,
-                                  width=45, height=30,
+                                  width=50, height=25,
                                   font=controller.font,
                                   selectmode=EXTENDED)
         self.chose_list.pack(side=LEFT, anchor=N, fill=None, expand=True)
@@ -153,7 +153,7 @@ class FinalizePhage(Frame):
         """
         for phage in self.metadata:
             phageid = phage["PhageID"].decode("utf-8")
-            host = phage["HostStrain"].decode("utf-8")
+            host = phage["HostGenus"].decode("utf-8")
             cluster = phage["Cluster"].decode("utf-8")
             status = phage["Status"].decode("utf-8")
             add = "\t({}, {}, {})".format(host, cluster, status)
@@ -188,7 +188,7 @@ class FinalizePhage(Frame):
             # Iterate through selected hosts
             for host in chosen_hosts:
                 # Subset the array based on current host selection
-                phages = filtered_phages[filtered_phages["HostStrain"] == host]
+                phages = filtered_phages[filtered_phages["HostGenus"] == host]
                 # Add those phages to the pre-selection
                 for phage in phages:
                     phageid = phage["PhageID"].decode('utf-8')
@@ -262,7 +262,7 @@ class FinalizePhage(Frame):
         for phage in pre_selected_phages:
             data = self.metadata[self.metadata["PhageID"] ==
                                  phage.encode('utf-8')]
-            host = data['HostStrain'][0].decode('utf-8')
+            host = data['HostGenus'][0].decode('utf-8')
             cluster = data['Cluster'][0].decode('utf-8')
             status = data['Status'][0].decode('utf-8')
             add = "\t({}, {}, {})".format(host, cluster, status)
@@ -290,13 +290,13 @@ class FinalizePhage(Frame):
         # Sort by HostStrain, then PhageID
         elif mode == 1:
             self.metadata = np.sort(self.metadata,
-                                    order=["HostStrain", "PhageID"],
+                                    order=["HostGenus", "PhageID"],
                                     kind="mergesort")
 
         # Sort by Cluster, then PhageID
         elif mode == 2:
             self.metadata = np.sort(self.metadata,
-                                    order=["Cluster", "HostStrain", "PhageID"],
+                                    order=["Cluster", "HostGenus", "PhageID"],
                                     kind="mergesort")
 
         self.phages = list(self.metadata["PhageID"])
@@ -304,7 +304,7 @@ class FinalizePhage(Frame):
 
         for phage in self.metadata:
             phageid = phage["PhageID"].decode('utf-8')
-            host = phage["HostStrain"].decode('utf-8')
+            host = phage["HostGenus"].decode('utf-8')
             cluster = phage["Cluster"].decode('utf-8')
             status = phage["Status"].decode('utf-8')
             add = "\t({}, {}, {})".format(host, cluster, status)
@@ -323,7 +323,7 @@ class FinalizePhage(Frame):
             if add_name not in self.chose_list.get(0, END):
                 data = self.metadata[self.metadata["PhageID"] ==
                                      add_name.encode('utf-8')]
-                host = data["HostStrain"][0].decode('utf-8')
+                host = data["HostGenus"][0].decode('utf-8')
                 cluster = data["Cluster"][0].decode('utf-8')
                 status = data["Status"][0].decode('utf-8')
                 add = "\t({}, {}, {})".format(host, cluster, status)

@@ -133,8 +133,9 @@ class MainWindowController:
         them to utf-8 strings, and adds them to self.available_hosts.
         :return:
         """
-        for host in list(np.unique(self.metadata["HostStrain"])):
+        for host in list(np.unique(self.metadata["HostGenus"])):
             self.available_hosts.append(host.decode("utf-8"))
+        print(self.available_hosts)
 
     def update_available_clusters(self):
         """
@@ -145,6 +146,8 @@ class MainWindowController:
         """
         for cluster in list(np.unique(self.metadata["Cluster"])):
             self.available_clusters.append(cluster.decode("utf-8"))
+
+        print(self.available_clusters)
 
     def update_available_phages(self):
         """
