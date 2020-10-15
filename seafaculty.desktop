@@ -5,5 +5,5 @@ Name=PhamNexus
 Icon=/home/seafaculty/phamnexus/img/icon.svg
 StartupNotify=true
 Path=/home/seafaculty/phamnexus/
-Exec=python3 __main__.py
+Exec=python3 phamnexus.py
 Categories=Application;Utility
