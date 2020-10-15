@@ -177,7 +177,7 @@ class DatabaseUpdater:
                 return
             try:
                 command = "mysql -u {} -p{} -e 'DROP DATABASE {}; CREATE DATABASE {}".format(
-                    self.handler.username, self.handler.password, self.handler.database,
+                    self.handler.username, self.handler.password,
                     self.handler.database, self.handler.database)
                 with Popen(shlex.split(command)) as proc:
                     proc.wait()
