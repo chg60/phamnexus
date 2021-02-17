@@ -119,8 +119,9 @@ class DatabaseUpdater:
         :return: remote_version
         """
         try:
-            version_url = "{}/{}.version".format(self.controller.server,
-                                                 self.handler.database)
+            version_url = "{}/{}/{}.version".format(self.controller.server,
+                                                    self.handler.database,
+                                                    self.handler.database)
             request = http_pool.request('GET', version_url)
             if request.status == 404:
                 showinfo(title="404 Error",
@@ -163,8 +164,9 @@ class DatabaseUpdater:
         if self.do_update:
 
             try:
-                db_url = "{}/{}.sql".format(self.controller.server,
-                                            self.handler.database)
+                db_url = "{}/{}/{}.sql".format(self.controller.server,
+                                               self.handler.database,
+                                               self.handler.database)
 
                 request = http_pool.request('GET', db_url, preload_content=False)
                 if request.status == 200:

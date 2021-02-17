@@ -1,6 +1,24 @@
 import pymysql as pms
 import getpass
 
+MCH_MESSAGES = {"bad user or pass": "Access denied for user '{}'@'localhost'. Please verify your "
+                                    "account credentials and try again.",
+                "too many attempts": "Too many login attempts. Please verify your account "
+                                     "credentials and try again.",
+                "bad database": "User '{}'@'localhost' does not have access to database '{}'. "
+                                "Please verify that the database name is spelled correctly and "
+                                "that your account has access to it.",
+                "already connected": "Already connected to MySQL. Multiple connections are not "
+                                     "presently supported through a single instance of "
+                                     "MySQLConnectionHandler.",
+                "no connection": "Cannot proceed without an open connection.",
+                "invalid syntax": "Invalid MySQL syntax for issued command '{}'.",
+                "validate login": "\nError: database validation can only be performed after "
+                                  "validation of username and password.",
+                "database change": "\nError: database attribute cannot be changed with a "
+                                   "connection open. Create a new MySQLConnectionHandler "
+                                   "object to use database '{}'\n"}
+
 
 class MySQLConnectionHandler:
     def __init__(self, username=None, password=None, database=None,
@@ -13,38 +31,6 @@ class MySQLConnectionHandler:
         real, a connection is established and can be used externally.
         :param database: the name of the MySQL database to connect to
         """
-        # Error messages for user
-        self.messages = {"bad user or pass": "Access denied for user '{}'@"
-                                             "'localhost'. Please verify your "
-                                             "account credentials and try "
-                                             "again.",
-                         "too many attempts": "Too many login attempts. Please"
-                                              " verify your account "
-                                              "credentials and try again.",
-                         "bad database": "User '{}'@'localhost' does not have "
-                                         "access to database '{}'. Please "
-                                         "verify that the database name is "
-                                         "spelled correctly and that your "
-                                         "account has access to it.",
-                         "already connected": "Already connected to MySQL. "
-                                              "Multiple connections are not "
-                                              "presently supported through a "
-                                              "single instance of "
-                                              "MySQLConnectionHandler.",
-                         "no connection": "Cannot proceed without an open "
-                                          "connection.",
-                         "invalid syntax": "Invalid MySQL syntax for "
-                                           "issued command '{}'.",
-                         "validate login": "\nError: database validation can "
-                                           "only be performed after "
-                                           "validation of username and "
-                                           "password.",
-                         "database change": "\nError: database attribute "
-                                            "cannot be changed with a "
-                                            "connection open. Create a new "
-                                            "MySQLConnectionHandler object "
-                                            "to use database '{}'\n"}
-
         # Store pymysql connection object once it's created
         self.connection = None
 
@@ -127,7 +113,7 @@ class MySQLConnectionHandler:
             self._database = value
             self._database_status = False
         else:
-            print(self.messages["database change"].format(value))
+            print(MCH_MESSAGES["database change"].format(value))
         
     def validate_database_access(self):
         """
@@ -146,7 +132,7 @@ class MySQLConnectionHandler:
             except pms.err.Error:
                 self._database_status = False
         else:
-            print(self.messages["validate login"])
+            print(MCH_MESSAGES["validate login"])
         return
 
     @property
@@ -209,10 +195,10 @@ class MySQLConnectionHandler:
                 # If self.credential_status is still false, bad user/pass
                 if self.credential_status is False:
                     if self.login_attempts >= 1:
-                        print(self.messages["bad user or pass"].format(
+                        print(MCH_MESSAGES["bad user or pass"].format(
                             self.username))
                     else:
-                        print(self.messages["too many attempts"])
+                        print(MCH_MESSAGES["too many attempts"])
                         return
 
     def ask_username_and_password(self):
@@ -279,7 +265,7 @@ class MySQLConnectionHandler:
                 # If database is invalid
                 else:
                     # Print bad database message
-                    print(self.messages["bad database"].format(self.username,
+                    print(MCH_MESSAGES["bad database"].format(self.username,
                                                                self.database))
             # If credentials have not been validated
             else:
@@ -303,7 +289,7 @@ class MySQLConnectionHandler:
                     # If database is invalid
                     else:
                         # Print bad database message
-                        print(self.messages["bad database"].format(
+                        print(MCH_MESSAGES["bad database"].format(
                             self.username, self.database))
                 # If credentials are still invalid
                 else:
@@ -312,7 +298,7 @@ class MySQLConnectionHandler:
         # If a connection does already exist
         else:
             # Print already connected message
-            print(self.messages["already connected"])
+            print(MCH_MESSAGES["already connected"])
         return
 
     def execute_query(self, query=""):
@@ -348,7 +334,7 @@ class MySQLConnectionHandler:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
                     return
             else:
-                print(self.messages["no connection"])
+                print(MCH_MESSAGES["no connection"])
                 return
 
     def execute_transaction(self, statement_list=[]):
@@ -371,7 +357,7 @@ class MySQLConnectionHandler:
                         print(statement)
                         cursor.execute(statement)
                     except pms.err.ProgrammingError:
-                        print(self.messages["invalid syntax"].format(
+                        print(MCH_MESSAGES["invalid syntax"].format(
                             statement))
                         cursor.execute("ROLLBACK")
                         cursor.close()
@@ -393,7 +379,7 @@ class MySQLConnectionHandler:
                             print(statement)
                             cursor.execute(statement)
                         except pms.err.ProgrammingError:
-                            print(self.messages["invalid syntax"].format(
+                            print(MCH_MESSAGES["invalid syntax"].format(
                                 statement))
                             cursor.execute("ROLLBACK")
                             cursor.close()
@@ -405,7 +391,7 @@ class MySQLConnectionHandler:
                     print("Error {}: {}".format(err.args[0], err.args[1]))
                     return 1
             else:
-                print(self.messages["no connection"])
+                print(MCH_MESSAGES["no connection"])
                 return 1
 
     def close_connection(self):

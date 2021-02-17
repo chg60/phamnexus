@@ -16,7 +16,7 @@ from ui.windows.MainWindow import MainWindow
 class MainWindowController:
     def __init__(self):
         # Load application preferences
-        self.server = "http://phamerator.webfactional.com/databases_Hatfull/"
+        self.server = "http://databases.hatfull.org/"
         self.font = ("Monaco", 12)
 
         # MySQL connection with select-only privileges
